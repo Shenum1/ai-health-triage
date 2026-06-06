@@ -201,6 +201,49 @@ strong { font-weight: 600; color: var(--text); }
 @media (max-width: 640px) {
   .container { padding: 0 16px; }
   .hide-mobile { display: none; }
+
+  /* Navbar */
+  .navbar__inner { height: 56px; padding: 0 16px; }
+  .navbar__brand { font-size: 1.05rem; }
+  .navbar__brand-icon { width: 30px; height: 30px; }
+  .navbar__links { gap: 6px; }
+  .btn--sm { padding: 6px 12px; font-size: 0.8rem; }
+
+  /* Typography */
+  h3 { font-size: 1.1rem; }
+
+  /* Page header */
+  .page-header { padding: 20px 0; }
+  .page-header h1 { font-size: 1.4rem; }
+  .page-body { padding: 20px 0 48px; }
+
+  /* Two-col */
+  .two-col { grid-template-columns: 1fr; gap: 16px; }
+
+  /* Section cards */
+  .section-card__body { padding: 16px; gap: 16px; }
+  .section-card__header { padding: 14px 16px; }
+
+  /* Modals */
+  .modal__header { padding: 16px; }
+  .modal__body { padding: 16px; gap: 14px; }
+  .modal__footer { padding: 12px 16px; flex-direction: column; }
+  .modal__footer .btn { width: 100%; }
+
+  /* Step indicator — hide labels on very small screens */
+  .step__label { display: none; }
+
+  /* Stat strip */
+  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+
+  /* Request cards */
+  .request-card__top { flex-direction: column; gap: 8px; }
+  .request-card__actions { flex-direction: column; }
+  .request-card__actions .btn { width: 100%; }
+
+  /* Admin table — horizontal scroll is already handled */
+  .filter-tabs { gap: 4px; }
+  .filter-tab { padding: 5px 10px; font-size: 0.78rem; }
 }
 
 /* ── Doctor Request / Admin additions ─────────────────────── */
