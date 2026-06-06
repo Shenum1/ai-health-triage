@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MediTriage AI — Preliminary Health Consultation</title>
   <link rel="stylesheet" href="/css/styles.css" />
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     /* ── Landing-specific styles ── */
     .hero {
@@ -270,7 +269,7 @@
   }, { threshold: 0.15 });
 
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-  lucide.createIcons();
+  renderIcons();
 </script>
 </body>
 </html>
