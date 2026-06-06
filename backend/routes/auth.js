@@ -2,7 +2,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const rateLimit = require('express-rate-limit');
-const { createUser, findByEmail, verifyPassword } = require('../models/user');
+const { createUser, findById } = require('../models/user');
+const { supabaseAuth } = require('../config/supabase');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -59,13 +60,20 @@ router.post('/login', authLimiter, async (req, res) => {
     return res.status(400).json({ error: 'Email and password are required' });
 
   try {
-    const user = await findByEmail(email);
-    if (!user || !verifyPassword(password, user.password))
+    const { data, error } = await supabaseAuth.auth.signInWithPassword({
+      email: email.toLowerCase(),
+      password,
+    });
+
+    if (error || !data.user)
+      return res.status(401).json({ error: 'Invalid email or password' });
+
+    const user = await findById(data.user.id);
+    if (!user)
       return res.status(401).json({ error: 'Invalid email or password' });
 
     issueToken(res, user.id);
-    const { password: _, ...safeUser } = user;
-    return res.json({ message: 'Login successful', user: safeUser });
+    return res.json({ message: 'Login successful', user });
   } catch (err) {
     console.error('Login error:', err);
     return res.status(500).json({ error: 'Login failed — please try again' });

@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser');
 const morgan       = require('morgan');
 const path         = require('path');
 
-const REQUIRED = ['GROQ_API_KEY', 'JWT_SECRET'];
+const REQUIRED = ['GROQ_API_KEY', 'JWT_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'];
 const missing  = REQUIRED.filter(k => !process.env[k]);
 if (missing.length) {
   console.error('\n  Missing required environment variables:', missing.join(', '));

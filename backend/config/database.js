@@ -12,7 +12,6 @@ const SCHEMA_SQL = `
     id          TEXT PRIMARY KEY,
     name        TEXT NOT NULL,
     email       TEXT NOT NULL UNIQUE,
-    password    TEXT NOT NULL,
     role        TEXT NOT NULL DEFAULT 'user',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -64,6 +63,7 @@ let schemaReady = false;
 async function ensureSchema() {
   if (schemaReady) return;
   await pool.query(SCHEMA_SQL);
+  await pool.query('ALTER TABLE users DROP COLUMN IF EXISTS password');
   schemaReady = true;
 }
 

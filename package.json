@@ -9,6 +9,7 @@
     "create-admin": "node create-admin.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
     "groq-sdk": "^0.3.3",
     "bcryptjs": "^2.4.3",
     "pg": "^8.13.0",

@@ -1,21 +1,29 @@
 // backend/models/user.js
-const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
+const { supabaseAdmin } = require('../config/supabase');
 const { dbGet, dbRun } = require('../config/database');
 
-const SALT_ROUNDS = 12;
-
 async function createUser({ name, email, password }) {
-  const existing = await dbGet('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
-  if (existing) throw new Error('EMAIL_EXISTS');
+  const { data, error } = await supabaseAdmin.auth.admin.createUser({
+    email: email.toLowerCase(),
+    password,
+    email_confirm: true,
+  });
 
-  const hashed = bcrypt.hashSync(password, SALT_ROUNDS);
-  const id = uuidv4();
+  if (error) {
+    if (error.message?.toLowerCase().includes('already registered') ||
+        error.message?.toLowerCase().includes('already been registered') ||
+        error.code === 'email_exists') {
+      throw new Error('EMAIL_EXISTS');
+    }
+    throw error;
+  }
+
   await dbRun(
-    'INSERT INTO users (id, name, email, password) VALUES (?, ?, ?, ?)',
-    [id, name.trim(), email.toLowerCase(), hashed]
+    'INSERT INTO users (id, name, email, role) VALUES (?, ?, ?, ?)',
+    [data.user.id, name.trim(), email.toLowerCase(), 'user']
   );
-  return findById(id);
+
+  return findById(data.user.id);
 }
 
 async function findByEmail(email) {
@@ -26,8 +34,4 @@ async function findById(id) {
   return dbGet('SELECT id, name, email, role, created_at FROM users WHERE id = ?', [id]);
 }
 
-function verifyPassword(plaintext, hashed) {
-  return bcrypt.compareSync(plaintext, hashed);
-}
-
-module.exports = { createUser, findByEmail, findById, verifyPassword };
+module.exports = { createUser, findByEmail, findById };
