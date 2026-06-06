@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/styles.css" />
   <style>
     /* ── Layout ───────────────────────────────────────────────── */
-    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--gray-50); }
+    body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; background: var(--gray-50); }
     .dashboard { display: flex; flex: 1; overflow: hidden; }
 
     /* ── Left Sidebar (history) ───────────────────────────────── */
@@ -231,20 +231,36 @@
       .chat-msg__bubble { max-width: 88%; }
     }
     @media (max-width: 600px) {
+      /* Sidebar — align with shrunken mobile navbar (56px) */
+      #history-sidebar { top: 56px; }
+
       /* Triage bar — single scrollable row, hide label */
       .triage-bar { padding: 6px 10px; gap: 5px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .triage-bar::-webkit-scrollbar { display: none; }
       .triage-bar__label { display: none; }
       .triage-level-pill { font-size: 0.68rem; padding: 3px 8px; flex-shrink: 0; }
 
-      /* Chat messages — leave room at bottom for fixed bars */
-      #chat-messages { padding: 10px; padding-bottom: 100px; gap: 8px; }
+      /* Chat messages — leave room at bottom for fixed disclaimer + input */
+      #chat-messages { padding: 10px; padding-bottom: 110px; gap: 8px; }
       .chat-msg__bubble { max-width: 90%; padding: 9px 12px; font-size: 0.85rem; }
       .chat-msg__avatar { width: 24px; height: 24px; font-size: 9px; }
 
-      /* Hide non-essential elements */
-      .metrics-strip { display: none; }
-      #quick-chips { display: none; }
+      /* Quick chips — horizontal scroll row (always visible) */
+      #quick-chips {
+        display: flex; flex-wrap: nowrap;
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        padding: 6px 10px; gap: 6px;
+      }
+      #quick-chips::-webkit-scrollbar { display: none; }
+      .quick-chip { flex-shrink: 0; font-size: 0.75rem; padding: 5px 10px; }
+
+      /* Metrics strip — compact 2×2 grid (always visible) */
+      .metrics-strip { display: grid; grid-template-columns: repeat(2, 1fr); }
+      .metric { padding: 6px 4px; border-right: 1px solid var(--gray-100); border-bottom: 1px solid var(--gray-100); }
+      .metric:nth-child(even) { border-right: none; }
+      .metric:nth-child(n+3) { border-bottom: none; }
+      .metric__val { font-size: 0.875rem; }
+      .metric__lbl { font-size: 0.6rem; }
 
       /* Pin disclaimer + input to viewport bottom — always visible */
       .disclaimer-bar {
@@ -260,7 +276,7 @@
         background: var(--white);
         box-shadow: 0 -1px 0 var(--gray-100);
       }
-      #chat-input { font-size: 0.85rem; min-height: 38px; padding: 8px 12px; }
+      #chat-input { font-size: 16px; min-height: 38px; padding: 8px 12px; }
       #chat-send { width: 38px; height: 38px; }
 
       /* User chip — avatar only */
