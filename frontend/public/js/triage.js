@@ -245,6 +245,14 @@ function newSession() {
 
   $$('.triage-level-pill').forEach(el => el.classList.remove('active'));
   setMetrics(0, null);
+
+  const seeDoctorBtn = document.getElementById('see-doctor-btn');
+  if (seeDoctorBtn) seeDoctorBtn.style.display = 'none';
+
+  const sidebar = $('#history-sidebar');
+  const overlay = $('#sidebar-overlay');
+  if (sidebar) sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('show');
 }
 
 function appendWelcomeMessage() {
