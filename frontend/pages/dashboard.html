@@ -75,7 +75,7 @@
 
     /* ── Messages ─────────────────────────────────────────────── */
     #chat-messages {
-      flex: 1; overflow-y: scroll; -webkit-overflow-scrolling: touch; padding: 20px;
+      flex: 1; overflow-y: auto; padding: 20px;
       display: flex; flex-direction: column; gap: 14px;
     }
     .chat-msg { display: flex; gap: 10px; }
@@ -234,7 +234,7 @@
       /* Sidebar — align with shrunken mobile navbar (56px) */
       #history-sidebar { top: 56px; }
 
-      /* Triage bar — single scrollable row, hide label */
+      /* Triage bar — horizontal scroll, no label */
       .triage-bar { padding: 6px 10px; gap: 5px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .triage-bar::-webkit-scrollbar { display: none; }
       .triage-bar__label { display: none; }
@@ -245,7 +245,7 @@
       .chat-msg__bubble { max-width: 90%; padding: 9px 12px; font-size: 0.85rem; }
       .chat-msg__avatar { width: 24px; height: 24px; font-size: 9px; }
 
-      /* Quick chips — horizontal scroll row (always visible) */
+      /* Quick chips — horizontal scroll row */
       #quick-chips {
         display: flex; flex-wrap: nowrap;
         overflow-x: auto; -webkit-overflow-scrolling: touch;
@@ -254,7 +254,7 @@
       #quick-chips::-webkit-scrollbar { display: none; }
       .quick-chip { flex-shrink: 0; font-size: 0.75rem; padding: 5px 10px; }
 
-      /* Metrics strip — compact 2×2 grid (always visible) */
+      /* Metrics strip — compact 2×2 grid */
       .metrics-strip { display: grid; grid-template-columns: repeat(2, 1fr); }
       .metric { padding: 6px 4px; border-right: 1px solid var(--gray-100); border-bottom: 1px solid var(--gray-100); }
       .metric:nth-child(even) { border-right: none; }
@@ -262,7 +262,7 @@
       .metric__val { font-size: 0.875rem; }
       .metric__lbl { font-size: 0.6rem; }
 
-      /* Pin disclaimer + input to viewport bottom — always visible */
+      /* Pin disclaimer + input to viewport bottom */
       .disclaimer-bar {
         position: fixed; left: 0; right: 0; z-index: 49;
         bottom: 54px;
@@ -307,9 +307,6 @@
     </div>
     <div class="navbar__links">
       <button id="new-session-btn" class="btn btn--ghost btn--sm hide-mobile">+ New session</button>
-      <a href="/my-requests" class="btn btn--ghost btn--sm hide-mobile" id="appointments-link">📅 Appointments</a>
-      <a href="/see-a-doctor" class="btn btn--secondary btn--sm hide-mobile" id="see-doctor-btn" style="display:none;">🩺 See a doctor</a>
-      <a href="/admin" class="btn btn--ghost btn--sm hide-mobile" id="admin-link" style="display:none;">⚙ Admin panel</a>
       <div class="user-chip">
         <div class="user-chip__avatar" data-user-initials>?</div>
         <span class="user-chip__name hide-mobile" data-user-name>Loading...</span>
