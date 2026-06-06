@@ -234,21 +234,16 @@
       .chat-msg__bubble { max-width: 88%; }
     }
     @media (max-width: 600px) {
-      .triage-bar { padding: 8px 12px; gap: 6px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .triage-bar { padding: 6px 12px; gap: 6px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .triage-bar::-webkit-scrollbar { display: none; }
-      .triage-level-pill { font-size: 0.72rem; padding: 3px 9px; flex-shrink: 0; }
+      .triage-level-pill { font-size: 0.7rem; padding: 3px 8px; flex-shrink: 0; }
       #chat-messages { padding: 12px; }
-    }
-    @media (max-width: 480px) {
-      .metric { padding: 5px 0; }
-      .metric__val { font-size: 0.85rem; }
-      .metric__lbl { font-size: 0.58rem; }
-      .chat-msg__bubble { max-width: 92%; }
-      #chat-messages { padding: 10px; gap: 10px; }
-      .chat-input-area { padding: 8px 10px; }
-      .disclaimer-bar { font-size: 0.68rem; padding: 4px 10px; }
-      #quick-chips { padding: 0 12px 10px; gap: 6px; }
-      .quick-chip { font-size: 0.78rem; padding: 5px 10px; }
+      /* Hide non-essential elements to keep input bar always visible */
+      .metrics-strip { display: none; }
+      #quick-chips { display: none; }
+      .disclaimer-bar { font-size: 0.67rem; padding: 4px 10px; }
+      .chat-input-area { padding: 8px 12px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+      .chat-msg__bubble { max-width: 90%; }
     }
   </style>
 </head>
