@@ -9,6 +9,11 @@
     body { display: flex; flex-direction: column; min-height: 100vh; }
     main { flex: 1; background: var(--gray-50); }
     .hidden { display: none !important; }
+
+    @media (max-width: 640px) {
+      .step-actions { flex-direction: column !important; gap: 10px !important; }
+      .step-actions .btn { width: 100%; justify-content: center; }
+    }
   </style>
 </head>
 <body>
@@ -87,7 +92,7 @@
               </div>
             </div>
           </div>
-          <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+          <div class="step-actions" style="margin-top:20px;display:flex;justify-content:flex-end;">
             <button class="btn btn--primary" id="btn-1-next">
               Continue
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -170,7 +175,7 @@
               </div>
             </div>
           </div>
-          <div style="margin-top:20px;display:flex;justify-content:space-between;">
+          <div class="step-actions" style="margin-top:20px;display:flex;justify-content:space-between;">
             <button class="btn btn--ghost" id="btn-2-back">← Back</button>
             <button class="btn btn--primary" id="btn-2-next">Continue →</button>
           </div>
@@ -206,7 +211,7 @@
               </div>
             </div>
           </div>
-          <div style="margin-top:20px;display:flex;justify-content:space-between;">
+          <div class="step-actions" style="margin-top:20px;display:flex;justify-content:space-between;">
             <button class="btn btn--ghost" id="btn-3-back">← Back</button>
             <button class="btn btn--primary" id="btn-3-next">Review &amp; confirm →</button>
           </div>
@@ -233,7 +238,7 @@
             <div class="section-card__body">
               <div id="review-table"></div>
             </div>
-            <div style="padding:0 24px 24px;display:flex;gap:10px;justify-content:space-between;">
+            <div class="step-actions" style="padding:0 24px 24px;display:flex;gap:10px;justify-content:space-between;">
               <button class="btn btn--ghost" id="btn-4-back">← Back</button>
               <button class="btn btn--primary" id="submit-btn">Confirm &amp; submit request</button>
             </div>

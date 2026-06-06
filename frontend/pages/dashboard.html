@@ -234,6 +234,17 @@
       .triage-bar { padding: 8px 12px; gap: 6px; }
       .triage-level-pill { font-size: 0.72rem; padding: 3px 9px; }
       #chat-messages { padding: 12px; }
+      .metrics-strip { flex-wrap: wrap; }
+    }
+    @media (max-width: 480px) {
+      .metric { flex: 0 0 50%; border-right: none; border-bottom: 1px solid var(--gray-100); }
+      .metric:nth-child(odd) { border-right: 1px solid var(--gray-100); }
+      .chat-msg__bubble { max-width: 92%; }
+      #chat-messages { padding: 10px; gap: 10px; }
+      .chat-input-area { padding: 8px 10px; }
+      .disclaimer-bar { font-size: 0.68rem; padding: 4px 10px; }
+      #quick-chips { padding: 0 12px 10px; gap: 6px; }
+      .quick-chip { font-size: 0.78rem; padding: 5px 10px; }
     }
   </style>
 </head>

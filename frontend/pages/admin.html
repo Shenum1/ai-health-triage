@@ -10,6 +10,10 @@
     main { flex:1; background:var(--gray-50); }
     .admin-layout { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start; }
     @media(max-width:860px){ .admin-layout { grid-template-columns:1fr; } }
+    @media(max-width:640px){
+      .admin-layout { gap: 16px; }
+      .admin-nav__item { padding: 10px 14px; font-size: 0.82rem; }
+    }
     .admin-nav { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); overflow:hidden; }
     .admin-nav__item {
       display:flex; align-items:center; gap:10px;
