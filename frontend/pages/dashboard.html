@@ -7,7 +7,8 @@
   <link rel="stylesheet" href="/css/styles.css" />
   <style>
     /* ── Layout ───────────────────────────────────────────────── */
-    body { position: fixed; inset: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--gray-50); }
+    html { height: -webkit-fill-available; }
+    body { display: flex; flex-direction: column; height: 100vh; height: -webkit-fill-available; overflow: hidden; background: var(--gray-50); }
     .dashboard { display: flex; flex: 1; overflow: hidden; }
 
     /* ── Left Sidebar (history) ───────────────────────────────── */
@@ -233,8 +234,9 @@
       .chat-msg__bubble { max-width: 88%; }
     }
     @media (max-width: 600px) {
-      .triage-bar { padding: 8px 12px; gap: 6px; }
-      .triage-level-pill { font-size: 0.72rem; padding: 3px 9px; }
+      .triage-bar { padding: 8px 12px; gap: 6px; flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .triage-bar::-webkit-scrollbar { display: none; }
+      .triage-level-pill { font-size: 0.72rem; padding: 3px 9px; flex-shrink: 0; }
       #chat-messages { padding: 12px; }
     }
     @media (max-width: 480px) {
