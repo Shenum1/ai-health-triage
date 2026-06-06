@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Appointments — MediTriage AI</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    body { display:flex; flex-direction:column; min-height:100vh; }
+    main { flex:1; background:var(--gray-50); }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      display: flex; gap: 0; padding: 0 0;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      padding: 14px 24px;
+      font-size: 0.9rem; font-weight: 500;
+      border: none; background: none; cursor: pointer;
+      color: var(--text-muted);
+      border-bottom: 3px solid transparent;
+      white-space: nowrap; transition: all 0.15s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Appointment card ── */
+    .appt-card {
+      background: var(--white);
+      border: 1px solid var(--gray-100);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .appt-card:hover { box-shadow: var(--shadow-md); }
+
+    .appt-card--scheduled { border-left: 4px solid var(--teal); }
+    .appt-card--completed { border-left: 4px solid var(--green); }
+    .appt-card--pending   { border-left: 4px solid var(--amber); }
+    .appt-card--reviewing { border-left: 4px solid var(--navy-mid); }
+    .appt-card--cancelled { border-left: 4px solid var(--gray-300); opacity: 0.75; }
+
+    .appt-card__header {
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid var(--gray-100);
+      flex-wrap: wrap; gap: 8px;
+    }
+
+    .appt-card__body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+    .appt-card__footer { padding: 14px 20px; border-top: 1px solid var(--gray-100); display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Confirmed date block ── */
+    .confirmed-slot {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--teal-light);
+      border: 1px solid #74C9A8;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+    }
+    .confirmed-slot__icon {
+      width: 52px; height: 52px; flex-shrink: 0;
+      background: var(--teal); border-radius: var(--radius-md);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: white;
+    }
+    .confirmed-slot__icon .cs-month { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+    .confirmed-slot__icon .cs-day   { font-size: 1.3rem; font-weight: 700; line-height: 1; }
+    .confirmed-slot__info { flex: 1; }
+    .confirmed-slot__time  { font-size: 1rem; font-weight: 600; color: var(--teal); }
+    .confirmed-slot__label { font-size: 0.78rem; color: var(--teal); opacity: 0.8; margin-top: 2px; }
+    .confirmed-slot__today { display:inline-block; background: var(--teal); color:white; font-size:0.65rem; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:8px; vertical-align:middle; }
+
+    /* ── Preferred slot (not yet confirmed) ── */
+    .preferred-slot {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--gray-50); border: 1px solid var(--gray-100);
+      border-radius: var(--radius-md); padding: 12px 14px;
+      font-size: 0.875rem;
+    }
+    .preferred-slot__label { color: var(--text-muted); font-size: 0.78rem; }
+    .preferred-slot__val   { font-weight: 500; color: var(--text); }
+
+    /* ── Doctor note ── */
+    .doctor-note {
+      background: var(--teal-light); border: 1px solid #74C9A8;
+      border-radius: var(--radius-md); padding: 12px 14px;
+      font-size: 0.875rem; color: var(--teal);
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .doctor-note__icon { flex-shrink:0; font-size:16px; }
+    .doctor-note__body { flex:1; }
+    .doctor-note__title { font-weight:600; margin-bottom:4px; }
+
+    /* ── Status timeline ── */
+    .status-timeline { display:flex; gap:0; align-items:center; flex-wrap:wrap; row-gap:8px; }
+    .st-step { display:flex; align-items:center; gap:4px; font-size:0.75rem; font-weight:500; }
+    .st-dot  { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .st-line { width:24px; height:2px; background:var(--gray-100); margin:0 2px; }
+    .st-done  .st-dot { background: var(--green); }
+    .st-active .st-dot { background: var(--navy); box-shadow: 0 0 0 3px var(--navy-light); }
+    .st-future .st-dot { background: var(--gray-100); border:1.5px solid var(--gray-300); }
+    .st-done  .st-label { color: var(--green); }
+    .st-active .st-label { color: var(--navy); font-weight:700; }
+    .st-future .st-label { color: var(--gray-300); }
+
+    /* ── Requests list (old style) ── */
+    .request-card {
+      background: var(--white); border:1px solid var(--gray-100);
+      border-radius: var(--radius-lg); padding:20px;
+      transition: box-shadow 0.15s;
+    }
+    .request-card:hover { box-shadow: var(--shadow-sm); }
+    .request-card__top  { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .request-card__meta { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:12px; font-size:0.82rem; color:var(--text-muted); }
+    .request-card__meta-item { display:flex; align-items:center; gap:5px; }
+    .request-card__complaint  { font-size:0.875rem; color:var(--text); border-left:3px solid var(--gray-100); padding-left:12px; margin-bottom:12px; line-height:1.5; }
+    .request-card__actions    { display:flex; gap:8px; flex-wrap:wrap; }
+
+    /* ── Stat strip ── */
+    .stat-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:10px; margin-bottom:24px; }
+    .stat-box   { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-md); padding:14px; text-align:center; }
+    .stat-box__val { font-size:1.4rem; font-weight:600; color:var(--navy); }
+    .stat-box__lbl { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-top:2px; }
+
+    .empty-state { text-align:center; padding:56px 24px; }
+    .empty-state__icon { font-size:44px; margin-bottom:16px; }
+    .empty-state h3 { font-family:var(--font); font-size:1rem; font-weight:600; margin-bottom:8px; }
+    .empty-state p  { font-size:0.875rem; max-width:320px; margin:0 auto 20px; }
+
+    /* Modal */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index:200; padding:16px; }
+    .modal-overlay.hidden { display:none; }
+    .modal { background:var(--white); border-radius:var(--radius-lg); width:100%; max-width:440px; box-shadow:var(--shadow-lg); }
+    .modal__header { padding:18px 22px; border-bottom:1px solid var(--gray-100); display:flex; align-items:center; justify-content:space-between; }
+    .modal__header h3 { font-family:var(--font); font-size:1rem; font-weight:600; margin:0; }
+    .modal__body   { padding:22px; }
+    .modal__footer { padding:14px 22px; border-top:1px solid var(--gray-100); display:flex; gap:10px; justify-content:flex-end; }
+    .modal__close  { background:none; border:none; cursor:pointer; color:var(--text-muted); padding:4px; border-radius:6px; display:flex; align-items:center; }
+    .modal__close:hover { background:var(--gray-100); }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">
+      <div class="navbar__brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      MediTriage AI
+    </a>
+    <div class="navbar__links">
+      <a href="/dashboard"    class="btn btn--ghost btn--sm">← Dashboard</a>
+      <a href="/see-a-doctor" class="btn btn--primary btn--sm">+ New request</a>
+      <button id="logout-btn" class="btn btn--ghost btn--sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="container">
+      <div class="page-header__eyebrow">My health</div>
+      <h1>Appointments &amp; requests</h1>
+      <p>View your confirmed appointments and track all consultation requests.</p>
+    </div>
+  </div>
+
+  <!-- Stats strip -->
+  <div style="background:var(--white);border-bottom:1px solid var(--gray-100);padding:14px 0;">
+    <div class="container">
+      <div class="stat-strip" id="stat-strip">
+        <div class="stat-box"><div class="stat-box__val" id="s-total">—</div><div class="stat-box__lbl">Total</div></div>
+        <div class="stat-box"><div class="stat-box__val" style="color:var(--teal)"   id="s-scheduled">—</div><div class="stat-box__lbl">Scheduled</div></div>
+        <div class="stat-box"><div class="stat-box__val" style="color:var(--amber)"  id="s-pending">—</div><div class="stat-box__lbl">Pending</div></div>
+        <div class="stat-box"><div class="stat-box__val" style="color:var(--green)"  id="s-completed">—</div><div class="stat-box__lbl">Completed</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-btn-appointments" onclick="switchTab('appointments')">
+      📅 My appointments
+      <span id="appt-badge" class="badge badge--navy" style="font-size:0.7rem;"></span>
+    </button>
+    <button class="tab-btn" id="tab-btn-requests" onclick="switchTab('requests')">
+      📋 All requests
+    </button>
+  </div>
+
+  <div class="page-body">
+    <div class="container">
+
+      <!-- Loading -->
+      <div id="loading" style="text-align:center;padding:56px;color:var(--text-muted);">
+        Loading your appointments…
+      </div>
+
+      <!-- ══ TAB: APPOINTMENTS ══ -->
+      <div id="tab-appointments" class="tab-panel active hidden">
+
+        <!-- Upcoming confirmed appointments -->
+        <div id="appt-section">
+          <h3 style="font-family:var(--font);font-size:0.9rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">
+            Confirmed appointments
+          </h3>
+          <div id="appt-list" style="display:flex;flex-direction:column;gap:14px;"></div>
+          <div id="appt-empty" class="empty-state hidden" style="padding:40px 0;">
+            <div class="empty-state__icon">📅</div>
+            <h3>No confirmed appointments yet</h3>
+            <p>Once a doctor confirms your request, your appointment will appear here with the date, time, and details.</p>
+            <a href="/see-a-doctor" class="btn btn--primary">Request a consultation</a>
+          </div>
+        </div>
+
+        <!-- Pending / in-review requests (waiting for confirmation) -->
+        <div id="waiting-section" style="margin-top:32px;">
+          <h3 style="font-family:var(--font);font-size:0.9rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">
+            Awaiting confirmation
+          </h3>
+          <div id="waiting-list" style="display:flex;flex-direction:column;gap:14px;"></div>
+          <div id="waiting-empty" class="hidden" style="padding:16px 0;font-size:0.875rem;color:var(--text-muted);">
+            No requests waiting for confirmation.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ══ TAB: ALL REQUESTS ══ -->
+      <div id="tab-requests" class="tab-panel hidden">
+        <div id="requests-list" style="display:flex;flex-direction:column;gap:14px;"></div>
+        <div id="requests-empty" class="empty-state hidden">
+          <div class="empty-state__icon">🩺</div>
+          <h3>No requests yet</h3>
+          <p>Submit a consultation request to speak with a real doctor.</p>
+          <a href="/see-a-doctor" class="btn btn--primary">Request a doctor consultation</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Cancel modal -->
+<div class="modal-overlay hidden" id="cancel-modal">
+  <div class="modal">
+    <div class="modal__header">
+      <h3>Cancel request</h3>
+      <button class="modal__close" id="cancel-close-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal__body">
+      <p style="font-size:0.9rem;">Are you sure you want to cancel this consultation request? This action cannot be undone.</p>
+      <div id="cancel-alert" class="alert alert--error mt-2"></div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" id="cancel-keep-btn">Keep request</button>
+      <button class="btn btn--danger" id="cancel-confirm-btn">Yes, cancel it</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+let requests       = [];
+let cancelTargetId = null;
+
+// ── Init ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await Auth.requireAuth();
+  if (!user) return;
+
+  document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
+  document.getElementById('cancel-close-btn').addEventListener('click', closeModal);
+  document.getElementById('cancel-keep-btn').addEventListener('click', closeModal);
+  document.getElementById('cancel-confirm-btn').addEventListener('click', confirmCancel);
+
+  await loadRequests();
+});
+
+// ── Load data ─────────────────────────────────────────────────
+async function loadRequests() {
+  try {
+    const { requests: data } = await API.doctor.myRequests();
+    requests = data;
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('tab-appointments').classList.remove('hidden');
+    document.getElementById('tab-requests').classList.remove('hidden');
+
+    // Fix active tab visibility
+    switchTab('appointments');
+
+    renderStats();
+    renderAppointmentsTab();
+    renderAllRequestsTab();
+
+    // Badge on Appointments tab
+    const scheduled = requests.filter(r => r.status === 'scheduled').length;
+    const badge = document.getElementById('appt-badge');
+    badge.textContent = scheduled || '';
+    badge.style.display = scheduled ? 'inline-flex' : 'none';
+
+  } catch (err) {
+    document.getElementById('loading').innerHTML =
+      `<p style="color:var(--red);text-align:center;">Failed to load: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+// ── Stats ─────────────────────────────────────────────────────
+function renderStats() {
+  const count = (s) => requests.filter(r => r.status === s).length;
+  document.getElementById('s-total').textContent     = requests.length;
+  document.getElementById('s-scheduled').textContent = count('scheduled');
+  document.getElementById('s-pending').textContent   = count('pending') + count('reviewing');
+  document.getElementById('s-completed').textContent = count('completed');
+}
+
+// ── Tab switch ────────────────────────────────────────────────
+function switchTab(name) {
+  ['appointments','requests'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+    document.getElementById('tab-btn-' + t).classList.toggle('active', t === name);
+  });
+}
+
+// ── APPOINTMENTS TAB ──────────────────────────────────────────
+function renderAppointmentsTab() {
+  const confirmed = requests.filter(r => ['scheduled','completed'].includes(r.status));
+  const waiting   = requests.filter(r => ['pending','reviewing'].includes(r.status));
+
+  // Confirmed appointments
+  const apptList  = document.getElementById('appt-list');
+  const apptEmpty = document.getElementById('appt-empty');
+  if (confirmed.length) {
+    apptEmpty.classList.add('hidden');
+    apptList.innerHTML = confirmed
+      .sort((a,b) => new Date(a.scheduled_at||a.preferred_date) - new Date(b.scheduled_at||b.preferred_date))
+      .map(r => buildAppointmentCard(r))
+      .join('');
+  } else {
+    apptList.innerHTML = '';
+    apptEmpty.classList.remove('hidden');
+  }
+
+  // Waiting list
+  const waitList  = document.getElementById('waiting-list');
+  const waitEmpty = document.getElementById('waiting-empty');
+  if (waiting.length) {
+    waitEmpty.classList.add('hidden');
+    waitList.innerHTML = waiting.map(r => buildWaitingCard(r)).join('');
+  } else {
+    waitList.innerHTML = '';
+    waitEmpty.classList.remove('hidden');
+  }
+}
+
+function buildAppointmentCard(r) {
+  const isScheduled = r.status === 'scheduled';
+  const isCompleted = r.status === 'completed';
+  const typeLabels  = { video:'📹 Video call', phone:'📞 Phone call', 'in-person':'🏥 In person' };
+
+  // Confirmed slot block
+  let slotHtml = '';
+  if (r.scheduled_at) {
+    const d      = new Date(r.scheduled_at);
+    const today  = new Date(); today.setHours(0,0,0,0);
+    const apptD  = new Date(d); apptD.setHours(0,0,0,0);
+    const isToday= apptD.getTime() === today.getTime();
+    const month  = d.toLocaleDateString('en-GB',{month:'short'}).toUpperCase();
+    const day    = d.getDate();
+    const time   = d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    const dayFull= d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+    slotHtml = `
+      <div class="confirmed-slot">
+        <div class="confirmed-slot__icon">
+          <span class="cs-month">${month}</span>
+          <span class="cs-day">${day}</span>
+        </div>
+        <div class="confirmed-slot__info">
+          <div class="confirmed-slot__time">
+            ${time}${isToday ? '<span class="confirmed-slot__today">TODAY</span>' : ''}
+          </div>
+          <div class="confirmed-slot__label">${dayFull}</div>
+          <div style="font-size:0.78rem;margin-top:4px;color:var(--teal);">${typeLabels[r.consultation_type]||r.consultation_type}</div>
+        </div>
+      </div>`;
+  }
+
+  // Doctor note
+  const noteHtml = r.doctor_notes ? `
+    <div class="doctor-note">
+      <span class="doctor-note__icon">👨‍⚕️</span>
+      <div class="doctor-note__body">
+        <div class="doctor-note__title">${r.assigned_doctor ? 'Dr. '+escapeHtml(r.assigned_doctor) : 'Doctor'}'s note</div>
+        <div>${escapeHtml(r.doctor_notes)}</div>
+      </div>
+    </div>` : '';
+
+  // Status timeline
+  const steps   = ['pending','reviewing','scheduled','completed'];
+  const current = steps.indexOf(r.status);
+  const timelineHtml = `
+    <div class="status-timeline">
+      ${steps.map((s, i) => {
+        const cls   = i < current ? 'st-done' : i === current ? 'st-active' : 'st-future';
+        const labels= { pending:'Submitted', reviewing:'Reviewing', scheduled:'Confirmed', completed:'Done' };
+        return `
+          ${i > 0 ? `<div class="st-line ${i <= current ? 'st-done' : ''}"></div>` : ''}
+          <div class="st-step ${cls}">
+            <div class="st-dot"></div>
+            <span class="st-label" style="font-size:0.72rem;">${labels[s]}</span>
+          </div>`;
+      }).join('')}
+    </div>`;
+
+  const borderClass = isCompleted ? 'appt-card--completed' : 'appt-card--scheduled';
+
+  return `
+  <div class="appt-card ${borderClass}">
+    <div class="appt-card__header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="badge ${statusBadgeClass(r.status)}">${statusLabel(r.status)}</span>
+        ${r.triage_level ? `<span class="badge ${triageBadgeClass(r.triage_level)}">${r.triage_level}</span>` : ''}
+      </div>
+      <span style="font-size:0.72rem;color:var(--text-muted);">
+        Request #${r.id.slice(0,8).toUpperCase()}
+      </span>
+    </div>
+    <div class="appt-card__body">
+      ${slotHtml}
+      ${timelineHtml}
+      <div style="font-size:0.875rem;border-left:3px solid var(--teal);padding-left:12px;color:var(--text);line-height:1.5;">
+        ${escapeHtml(r.chief_complaint)}
+      </div>
+      ${noteHtml}
+    </div>
+    ${isScheduled ? `
+    <div class="appt-card__footer">
+      <button class="btn btn--ghost btn--sm" onclick="openCancelModal('${r.id}')">Cancel appointment</button>
+    </div>` : ''}
+  </div>`;
+}
+
+function buildWaitingCard(r) {
+  const typeLabels = { video:'📹 Video call', phone:'📞 Phone call', 'in-person':'🏥 In person' };
+  const statusInfo = {
+    pending:   { icon:'🟡', msg:'Your request has been received and is awaiting review by our team.' },
+    reviewing: { icon:'🔵', msg:'A doctor is currently reviewing your request. You will be contacted soon.' },
+  };
+  const info = statusInfo[r.status] || {};
+
+  return `
+  <div class="appt-card appt-card--${r.status}">
+    <div class="appt-card__header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="badge ${statusBadgeClass(r.status)}">${info.icon} ${statusLabel(r.status)}</span>
+        ${r.triage_level ? `<span class="badge ${triageBadgeClass(r.triage_level)}">${r.triage_level}</span>` : ''}
+      </div>
+      <span style="font-size:0.72rem;color:var(--text-muted);">Submitted ${formatDate(r.created_at)}</span>
+    </div>
+    <div class="appt-card__body">
+      <div style="font-size:0.875rem;color:var(--text-muted);display:flex;align-items:center;gap:8px;background:var(--gray-50);padding:10px 14px;border-radius:var(--radius-md);">
+        <span style="font-size:18px;">${info.icon}</span>
+        <span>${info.msg}</span>
+      </div>
+      <div class="preferred-slot">
+        <span style="font-size:18px;">📅</span>
+        <div>
+          <div class="preferred-slot__label">Your preferred slot</div>
+          <div class="preferred-slot__val">
+            ${formatDateShort(r.preferred_date)} at ${formatTimePref(r.preferred_time)}
+            &nbsp;·&nbsp; ${typeLabels[r.consultation_type]||r.consultation_type}
+          </div>
+        </div>
+      </div>
+      <div style="font-size:0.875rem;border-left:3px solid var(--gray-100);padding-left:12px;color:var(--text);line-height:1.5;">
+        ${escapeHtml(r.chief_complaint)}
+      </div>
+    </div>
+    <div class="appt-card__footer">
+      <button class="btn btn--ghost btn--sm" onclick="openCancelModal('${r.id}')">Cancel request</button>
+    </div>
+  </div>`;
+}
+
+// ── ALL REQUESTS TAB ──────────────────────────────────────────
+function renderAllRequestsTab() {
+  const list  = document.getElementById('requests-list');
+  const empty = document.getElementById('requests-empty');
+  const typeIcons = { video:'📹', phone:'📞', 'in-person':'🏥' };
+  const typeLabels= { video:'Video call', phone:'Phone call', 'in-person':'In person' };
+
+  if (!requests.length) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  list.innerHTML = requests.map(r => {
+    const canCancel = ['pending','reviewing'].includes(r.status);
+    const noteHtml  = r.doctor_notes
+      ? `<div class="doctor-note mt-1"><span class="doctor-note__icon">👨‍⚕️</span><div class="doctor-note__body"><div class="doctor-note__title">Doctor's note</div><div>${escapeHtml(r.doctor_notes)}</div></div></div>`
+      : '';
+    const scheduledHtml = r.scheduled_at
+      ? `<div class="request-card__meta-item" style="color:var(--teal);font-weight:500;">✅ Confirmed: ${formatDate(r.scheduled_at)}</div>`
+      : '';
+
+    return `
+    <div class="request-card">
+      <div class="request-card__top">
+        <div>
+          <span class="badge ${statusBadgeClass(r.status)}">${statusLabel(r.status)}</span>
+          ${r.triage_level ? `<span class="badge ${triageBadgeClass(r.triage_level)}" style="margin-left:6px;">${r.triage_level}</span>` : ''}
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px;">
+            #${r.id.slice(0,8).toUpperCase()} · Submitted ${formatDate(r.created_at)}
+          </div>
+        </div>
+      </div>
+      <div class="request-card__meta">
+        <div class="request-card__meta-item">${typeIcons[r.consultation_type]||'📋'} ${typeLabels[r.consultation_type]||r.consultation_type}</div>
+        <div class="request-card__meta-item">📅 Preferred: ${formatDateShort(r.preferred_date)} @ ${formatTimePref(r.preferred_time)}</div>
+        ${r.assigned_doctor ? `<div class="request-card__meta-item">👨‍⚕️ Dr. ${escapeHtml(r.assigned_doctor)}</div>` : ''}
+        ${scheduledHtml}
+      </div>
+      <div class="request-card__complaint">${escapeHtml(r.chief_complaint)}</div>
+      ${noteHtml}
+      <div class="request-card__actions">
+        ${canCancel ? `<button class="btn btn--ghost btn--sm" onclick="openCancelModal('${r.id}')">Cancel</button>` : ''}
+        <a href="/see-a-doctor" class="btn btn--secondary btn--sm">Book another</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Cancel modal ──────────────────────────────────────────────
+function openCancelModal(id) {
+  cancelTargetId = id;
+  hideAlert(document.getElementById('cancel-alert'));
+  document.getElementById('cancel-modal').classList.remove('hidden');
+}
+function closeModal() {
+  cancelTargetId = null;
+  document.getElementById('cancel-modal').classList.add('hidden');
+}
+async function confirmCancel() {
+  if (!cancelTargetId) return;
+  const btn = document.getElementById('cancel-confirm-btn');
+  setLoading(btn, true);
+  try {
+    await API.doctor.cancelRequest(cancelTargetId);
+    closeModal();
+    await loadRequests();
+  } catch (err) {
+    showAlert(document.getElementById('cancel-alert'), err.message || 'Failed to cancel');
+    setLoading(btn, false);
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function formatTimePref(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+</script>
+</body>
+</html>

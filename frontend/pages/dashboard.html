@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — MediTriage AI</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    /* ── Layout ───────────────────────────────────────────────── */
+    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--gray-50); }
+    .dashboard { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Left Sidebar (history) ───────────────────────────────── */
+    #history-sidebar {
+      width: 300px; flex-shrink: 0;
+      background: var(--white);
+      border-right: 1px solid var(--gray-100);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.25s ease;
+    }
+    .sidebar__header {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--gray-100);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .sidebar__title { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+    .sidebar__body { flex: 1; overflow-y: auto; padding: 12px; }
+    .history-item {
+      padding: 12px; border-radius: var(--radius-md);
+      cursor: pointer; transition: background var(--transition);
+      border: 1px solid transparent; margin-bottom: 8px;
+    }
+    .history-item:hover { background: var(--gray-50); border-color: var(--gray-100); }
+    .history-item__top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .history-item__date { font-size: 0.72rem; color: var(--text-muted); }
+    .history-item__title {
+      font-size: 0.85rem; font-weight: 500; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+    .history-item__care { font-size: 0.78rem; color: var(--text-muted); }
+    .history-empty { font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 24px 0; line-height: 1.6; }
+
+    /* ── Main chat area ───────────────────────────────────────── */
+    .chat-area {
+      flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      min-width: 0;
+    }
+
+    /* ── Triage header bar ───────────────────────────────────── */
+    .triage-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-100);
+      padding: 10px 20px;
+      display: flex; align-items: center; gap: 10px;
+      flex-shrink: 0; flex-wrap: wrap;
+    }
+    .triage-bar__label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; margin-right: 4px; }
+    .triage-level-pill {
+      padding: 4px 12px; border-radius: 14px;
+      font-size: 0.78rem; font-weight: 500;
+      border: 1.5px solid transparent;
+      transition: all 0.2s;
+    }
+    #tl1 { background: var(--green-light); color: var(--green); }
+    #tl2 { background: var(--amber-light); color: var(--amber); }
+    #tl3 { background: var(--coral-light); color: var(--coral); }
+    #tl4 { background: var(--red-light);   color: var(--red); }
+    .triage-level-pill.active { transform: scale(1.06); font-weight: 700; box-shadow: 0 0 0 2px currentColor; }
+
+    /* ── Messages ─────────────────────────────────────────────── */
+    #chat-messages {
+      flex: 1; overflow-y: auto; padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .chat-msg { display: flex; gap: 10px; }
+    .chat-msg--user { flex-direction: row-reverse; }
+
+    .chat-msg__avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 2px;
+    }
+    .chat-msg--assistant .chat-msg__avatar { background: var(--navy); color: white; }
+    .chat-msg--user .chat-msg__avatar      { background: var(--teal-light); color: var(--teal); }
+
+    .chat-msg__bubble {
+      max-width: 75%; padding: 12px 15px;
+      border-radius: 14px; font-size: 0.9rem; line-height: 1.65;
+    }
+    .chat-msg--assistant .chat-msg__bubble {
+      background: var(--white); border: 1px solid var(--gray-100);
+      border-top-left-radius: 4px; color: var(--text);
+    }
+    .chat-msg--user .chat-msg__bubble {
+      background: var(--navy); color: white;
+      border-top-right-radius: 4px;
+    }
+
+    .triage-card {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin-top: 10px; padding: 10px 12px;
+      border-radius: var(--radius-md); font-size: 0.82rem;
+    }
+    .triage-card--green { background: var(--green-light); color: var(--green); }
+    .triage-card--amber { background: var(--amber-light); color: var(--amber); }
+    .triage-card--coral { background: var(--coral-light); color: var(--coral); }
+    .triage-card--red   { background: var(--red-light);   color: var(--red); }
+    .triage-card--gray  { background: var(--gray-100);    color: var(--gray-500); }
+    .triage-card__icon  { font-size: 15px; margin-top: 1px; flex-shrink: 0; }
+    .triage-card__level { font-weight: 700; font-size: 0.83rem; }
+    .triage-card__action { font-size: 0.78rem; margin-top: 2px; opacity: 0.85; }
+
+    .msg-error { color: var(--red); font-size: 0.875rem; }
+
+    /* Typing indicator */
+    #typing-indicator {
+      display: none; align-items: center; gap: 4px;
+      padding: 10px 14px;
+      background: var(--white); border: 1px solid var(--gray-100);
+      border-radius: 14px; border-top-left-radius: 4px;
+      width: fit-content;
+    }
+    .typing-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--gray-300);
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
+
+    /* Quick chips */
+    #quick-chips {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      padding: 0 20px 12px;
+    }
+    .quick-chip {
+      padding: 6px 13px; border-radius: 16px;
+      border: 1px solid var(--gray-100);
+      font-size: 0.82rem; cursor: pointer;
+      color: var(--text-muted); background: var(--white);
+      transition: all var(--transition);
+    }
+    .quick-chip:hover { background: var(--navy-light); color: var(--navy-mid); border-color: var(--navy-mid); }
+
+    /* ── Input area ───────────────────────────────────────────── */
+    .chat-input-area {
+      padding: 12px 16px;
+      border-top: 1px solid var(--gray-100);
+      background: var(--white);
+      flex-shrink: 0;
+    }
+    .disclaimer-bar {
+      font-size: 0.72rem; color: var(--amber);
+      background: var(--amber-light);
+      text-align: center; padding: 6px 16px;
+      border-top: 1px solid #FAC775;
+      flex-shrink: 0;
+    }
+    .input-row { display: flex; gap: 10px; align-items: flex-end; }
+    #chat-input {
+      flex: 1; resize: none;
+      border: 1.5px solid var(--gray-100); border-radius: var(--radius-md);
+      padding: 10px 14px;
+      font-family: var(--font); font-size: 0.9rem; color: var(--text);
+      background: var(--white); outline: none;
+      min-height: 44px; max-height: 120px; line-height: 1.5;
+      transition: border-color var(--transition);
+    }
+    #chat-input:focus { border-color: var(--navy-mid); box-shadow: 0 0 0 3px rgba(24,95,165,0.1); }
+    #chat-input::placeholder { color: var(--gray-300); }
+    #chat-send {
+      width: 44px; height: 44px; border-radius: var(--radius-md);
+      background: var(--navy); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background var(--transition), transform 0.1s;
+    }
+    #chat-send:hover:not(:disabled) { background: var(--navy-mid); }
+    #chat-send:active:not(:disabled) { transform: scale(0.95); }
+    #chat-send:disabled { opacity: 0.4; cursor: default; }
+
+    /* ── Metrics strip ────────────────────────────────────────── */
+    .metrics-strip {
+      display: flex; gap: 0;
+      border-top: 1px solid var(--gray-100);
+      flex-shrink: 0; background: var(--white);
+    }
+    .metric {
+      flex: 1; text-align: center; padding: 8px 0;
+      border-right: 1px solid var(--gray-100);
+    }
+    .metric:last-child { border-right: none; }
+    .metric__val  { font-size: 1rem; font-weight: 600; color: var(--navy); }
+    .metric__lbl  { font-size: 0.67rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* ── Navbar extras ────────────────────────────────────────── */
+    .user-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 10px; border-radius: var(--radius-md);
+      background: var(--gray-50); border: 1px solid var(--gray-100);
+    }
+    .user-chip__avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--navy); color: white;
+      font-size: 10px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-chip__name { font-size: 0.825rem; font-weight: 500; color: var(--text); }
+
+    /* ── Overlay (mobile sidebar) ─────────────────────────────── */
+    #sidebar-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.35); z-index: 50;
+    }
+    #sidebar-overlay.show { display: block; }
+
+    /* ── Mobile ───────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      #history-sidebar {
+        position: fixed; left: 0; top: 64px; bottom: 0;
+        z-index: 60; transform: translateX(-100%);
+        box-shadow: var(--shadow-lg);
+      }
+      #history-sidebar.open { transform: translateX(0); }
+      .chat-msg__bubble { max-width: 88%; }
+    }
+    @media (max-width: 600px) {
+      .triage-bar { padding: 8px 12px; gap: 6px; }
+      .triage-level-pill { font-size: 0.72rem; padding: 3px 9px; }
+      #chat-messages { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar" style="flex-shrink:0;">
+  <div class="navbar__inner">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button id="history-toggle" class="btn btn--ghost btn--sm" title="Toggle history" style="padding:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <a href="/" class="navbar__brand">
+        <div class="navbar__brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <span class="hide-mobile">MediTriage AI</span>
+      </a>
+    </div>
+    <div class="navbar__links">
+      <button id="new-session-btn" class="btn btn--ghost btn--sm hide-mobile">+ New session</button>
+      <a href="/my-requests" class="btn btn--ghost btn--sm hide-mobile" id="appointments-link">📅 Appointments</a>
+      <a href="/see-a-doctor" class="btn btn--secondary btn--sm hide-mobile" id="see-doctor-btn" style="display:none;">🩺 See a doctor</a>
+      <a href="/admin" class="btn btn--ghost btn--sm hide-mobile" id="admin-link" style="display:none;">⚙ Admin panel</a>
+      <div class="user-chip">
+        <div class="user-chip__avatar" data-user-initials>?</div>
+        <span class="user-chip__name hide-mobile" data-user-name>Loading...</span>
+      </div>
+      <button id="logout-btn" class="btn btn--ghost btn--sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebar-overlay"></div>
+
+<!-- Dashboard body -->
+<div class="dashboard">
+
+  <!-- History sidebar -->
+  <aside id="history-sidebar">
+    <div class="sidebar__header">
+      <span class="sidebar__title">Consultation history</span>
+      <button id="new-session-btn-side" class="btn btn--ghost btn--sm" onclick="newSession()">+ New</button>
+    </div>
+    <div class="sidebar__body" id="history-list">
+      <p class="history-empty">Loading history...</p>
+    </div>
+  </aside>
+
+  <!-- Chat area -->
+  <main class="chat-area">
+
+    <!-- Triage level indicator bar -->
+    <div class="triage-bar">
+      <span class="triage-bar__label">Triage:</span>
+      <span class="triage-level-pill" id="tl1">L1 — Self-care</span>
+      <span class="triage-level-pill" id="tl2">L2 — GP visit</span>
+      <span class="triage-level-pill" id="tl3">L3 — Urgent</span>
+      <span class="triage-level-pill" id="tl4">L4 — Emergency</span>
+    </div>
+
+    <!-- Messages -->
+    <div id="chat-messages">
+      <!-- Welcome message injected by JS -->
+    </div>
+
+    <!-- Typing indicator (in message flow) -->
+    <div style="padding: 0 20px 4px; flex-shrink:0;">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="width:30px;height:30px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div id="typing-indicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick symptom chips -->
+    <div id="quick-chips">
+      <button class="quick-chip" data-text="I have a headache and fever since this morning">Headache + fever</button>
+      <button class="quick-chip" data-text="I'm experiencing chest tightness and shortness of breath">Chest tightness</button>
+      <button class="quick-chip" data-text="I have severe stomach pain that started 2 hours ago">Stomach pain</button>
+      <button class="quick-chip" data-text="I've had a persistent dry cough for 5 days">Persistent cough</button>
+      <button class="quick-chip" data-text="I have a rash on my arm that appeared suddenly">Skin rash</button>
+      <button class="quick-chip" data-text="I feel dizzy and light-headed when I stand up">Dizziness</button>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer-bar">
+      ⚠ For educational purposes only — not a substitute for professional medical advice. In emergencies, call 911 / 999 / 112 immediately.
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-area">
+      <div class="input-row">
+        <textarea id="chat-input" placeholder="Describe your symptoms… (Enter to send, Shift+Enter for new line)" rows="1"></textarea>
+        <button id="chat-send" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics-strip">
+      <div class="metric">
+        <div class="metric__val" id="metric-queries">0</div>
+        <div class="metric__lbl">Queries</div>
+      </div>
+      <div class="metric">
+        <div class="metric__val" id="metric-level">—</div>
+        <div class="metric__lbl">Care Level</div>
+      </div>
+      <div class="metric">
+        <div class="metric__val" id="metric-severity">—</div>
+        <div class="metric__lbl">Severity</div>
+      </div>
+      <div class="metric">
+        <div class="metric__val" id="metric-session">1</div>
+        <div class="metric__lbl">Session</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="/js/api.js"></script>
+<script src="/js/triage.js"></script>
+<script>
+  // Append welcome message once DOM and scripts load
+  window.addEventListener('load', () => {
+    appendWelcomeMessage();
+  });
+</script>
+</body>
+</html>

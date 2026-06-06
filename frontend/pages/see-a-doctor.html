@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>See a Doctor — MediTriage AI</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    main { flex: 1; background: var(--gray-50); }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">
+      <div class="navbar__brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      MediTriage AI
+    </a>
+    <div class="navbar__links">
+      <a href="/dashboard" class="btn btn--ghost btn--sm">← Dashboard</a>
+      <a href="/my-requests" class="btn btn--secondary btn--sm">My requests</a>
+      <button id="logout-btn" class="btn btn--ghost btn--sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div style="background:var(--white);border-bottom:1px solid var(--gray-100);padding:16px 0;">
+    <div class="container">
+      <div class="step-indicator">
+        <div class="step active" id="step-ind-1"><div class="step__dot">1</div><span class="step__label hide-mobile">Your details</span></div>
+        <div class="step__line" id="line-1"></div>
+        <div class="step" id="step-ind-2"><div class="step__dot">2</div><span class="step__label hide-mobile">Appointment</span></div>
+        <div class="step__line" id="line-2"></div>
+        <div class="step" id="step-ind-3"><div class="step__dot">3</div><span class="step__label hide-mobile">Symptoms</span></div>
+        <div class="step__line" id="line-3"></div>
+        <div class="step" id="step-ind-4"><div class="step__dot">4</div><span class="step__label hide-mobile">Confirm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-header">
+    <div class="container">
+      <div class="page-header__eyebrow">Doctor Consultation</div>
+      <h1 id="step-title">Your details</h1>
+      <p id="step-desc">Please confirm your personal information before booking.</p>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="container">
+
+      <!-- STEP 1 -->
+      <div id="step-1" class="two-col">
+        <div>
+          <div id="alert-1" class="alert alert--error mb-2"></div>
+          <div class="section-card">
+            <div class="section-card__header">
+              <h3>Personal information</h3>
+              <p>This information will be shared with the consulting doctor.</p>
+            </div>
+            <div class="section-card__body">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="full-name">Full name <span style="color:var(--red)">*</span></label>
+                  <input class="form-input" type="text" id="full-name" placeholder="Jane Smith" autocomplete="name" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="dob">Date of birth</label>
+                  <input class="form-input" type="date" id="dob" />
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="contact-email">Email <span style="color:var(--red)">*</span></label>
+                  <input class="form-input" type="email" id="contact-email" placeholder="you@example.com" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="phone">Phone number</label>
+                  <input class="form-input" type="tel" id="phone" placeholder="+1 555 000 0000" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+            <button class="btn btn--primary" id="btn-1-next">
+              Continue
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+          </div>
+        </div>
+        <div>
+          <div class="info-card">
+            <div class="info-card__title">What to expect</div>
+            <div class="info-card__item"><span class="info-card__icon">📋</span><div>A qualified doctor will review your request and contact you at the scheduled time.</div></div>
+            <div class="info-card__item"><span class="info-card__icon">🔒</span><div>Your information is kept private and shared only with your assigned doctor.</div></div>
+            <div class="info-card__item"><span class="info-card__icon">⏰</span><div>You'll receive a confirmation once your appointment is accepted.</div></div>
+            <div class="info-card__item"><span class="info-card__icon">🚨</span><div>If you have an emergency, call <strong>911 / 999 / 112</strong> immediately.</div></div>
+          </div>
+          <div id="triage-summary" class="triage-summary-card mt-2 hidden">
+            <div class="triage-summary-card__label">From your last consultation</div>
+            <div class="triage-summary-card__level" id="ts-level"></div>
+            <div class="triage-summary-card__care" id="ts-care"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="step-2" class="hidden two-col">
+        <div>
+          <div id="alert-2" class="alert alert--error mb-2"></div>
+          <div class="section-card">
+            <div class="section-card__header">
+              <h3>Appointment preferences</h3>
+              <p>Choose how and when you'd like to consult.</p>
+            </div>
+            <div class="section-card__body">
+              <div class="form-group">
+                <label class="form-label">Consultation type <span style="color:var(--red)">*</span></label>
+                <div class="consult-type-grid">
+                  <div>
+                    <input class="consult-type-option" type="radio" name="consult-type" id="type-video" value="video" checked />
+                    <label class="consult-type-label" for="type-video">
+                      <span class="consult-type-label__icon">📹</span>
+                      <span class="consult-type-label__text">Video call</span>
+                    </label>
+                  </div>
+                  <div>
+                    <input class="consult-type-option" type="radio" name="consult-type" id="type-phone" value="phone" />
+                    <label class="consult-type-label" for="type-phone">
+                      <span class="consult-type-label__icon">📞</span>
+                      <span class="consult-type-label__text">Phone call</span>
+                    </label>
+                  </div>
+                  <div>
+                    <input class="consult-type-option" type="radio" name="consult-type" id="type-inperson" value="in-person" />
+                    <label class="consult-type-label" for="type-inperson">
+                      <span class="consult-type-label__icon">🏥</span>
+                      <span class="consult-type-label__text">In person</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="pref-date">Preferred date <span style="color:var(--red)">*</span></label>
+                  <input class="form-input" type="date" id="pref-date" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="pref-time">Preferred time <span style="color:var(--red)">*</span></label>
+                  <select class="form-select" id="pref-time">
+                    <option value="">Select a time</option>
+                    <option value="08:00">08:00 AM</option>
+                    <option value="09:00">09:00 AM</option>
+                    <option value="10:00">10:00 AM</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="13:00">01:00 PM</option>
+                    <option value="14:00">02:00 PM</option>
+                    <option value="15:00">03:00 PM</option>
+                    <option value="16:00">04:00 PM</option>
+                    <option value="17:00">05:00 PM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;justify-content:space-between;">
+            <button class="btn btn--ghost" id="btn-2-back">← Back</button>
+            <button class="btn btn--primary" id="btn-2-next">Continue →</button>
+          </div>
+        </div>
+        <div>
+          <div class="info-card">
+            <div class="info-card__title">Availability</div>
+            <p>Doctors are available Monday–Saturday, 8 AM – 6 PM. We will confirm your preferred slot or suggest the nearest available time.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div id="step-3" class="hidden two-col">
+        <div>
+          <div id="alert-3" class="alert alert--error mb-2"></div>
+          <div class="section-card">
+            <div class="section-card__header">
+              <h3>Describe your symptoms</h3>
+              <p>Help the doctor prepare by sharing what's been bothering you.</p>
+            </div>
+            <div class="section-card__body">
+              <div class="form-group">
+                <label class="form-label" for="chief-complaint">Chief complaint <span style="color:var(--red)">*</span></label>
+                <textarea class="form-textarea" id="chief-complaint" rows="4"
+                  placeholder="Describe your main symptoms — when they started, how severe (1–10), how they've changed…"></textarea>
+                <span class="form-hint">Be as specific as possible — this is what the doctor sees first.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="additional-notes">Additional notes <span class="text-muted" style="font-weight:400;">(optional)</span></label>
+                <textarea class="form-textarea" id="additional-notes" rows="3"
+                  placeholder="Current medications, allergies, recent test results…"></textarea>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;justify-content:space-between;">
+            <button class="btn btn--ghost" id="btn-3-back">← Back</button>
+            <button class="btn btn--primary" id="btn-3-next">Review &amp; confirm →</button>
+          </div>
+        </div>
+        <div>
+          <div class="info-card">
+            <div class="info-card__title">Tips for a great consultation</div>
+            <div class="info-card__item"><span class="info-card__icon">✓</span><div>Include when symptoms started and how they've changed.</div></div>
+            <div class="info-card__item"><span class="info-card__icon">✓</span><div>Mention any medications you're currently taking.</div></div>
+            <div class="info-card__item"><span class="info-card__icon">✓</span><div>Note any known allergies or past diagnoses.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div id="step-4" class="hidden">
+        <div id="confirm-view" style="max-width:680px;margin:0 auto;">
+          <div id="alert-4" class="alert alert--error mb-2"></div>
+          <div class="section-card">
+            <div class="section-card__header">
+              <h3>Review your request</h3>
+              <p>Please check everything before submitting.</p>
+            </div>
+            <div class="section-card__body">
+              <div id="review-table"></div>
+            </div>
+            <div style="padding:0 24px 24px;display:flex;gap:10px;justify-content:space-between;">
+              <button class="btn btn--ghost" id="btn-4-back">← Back</button>
+              <button class="btn btn--primary" id="submit-btn">Confirm &amp; submit request</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="success-view" class="hidden" style="max-width:560px;margin:0 auto;">
+          <div class="section-card">
+            <div class="section-card__body">
+              <div class="success-screen">
+                <div class="success-screen__icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <h2>Request submitted!</h2>
+                <p>Your doctor consultation request has been received. You'll be contacted once your appointment is confirmed.</p>
+                <div class="success-detail" id="success-detail"></div>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                  <a href="/my-requests" class="btn btn--primary">View my requests</a>
+                  <a href="/dashboard" class="btn btn--ghost">Back to dashboard</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script src="/js/api.js"></script>
+<script>
+let currentStep   = 1;
+let prefillTriage = null;
+
+const STEP_META = {
+  1: { title: 'Your details',      desc: 'Please confirm your personal information before booking.' },
+  2: { title: 'Appointment',       desc: 'Choose your preferred consultation type and time.' },
+  3: { title: 'Describe symptoms', desc: "Tell the doctor what's been bothering you." },
+  4: { title: 'Review & confirm',  desc: 'Check everything before sending your request.' },
+};
+
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function showErr(n, msg) {
+  const el = document.getElementById('alert-' + n);
+  if (el) showAlert(el, msg, 'error');
+}
+
+function clearErr(n) {
+  const el = document.getElementById('alert-' + n);
+  if (el) hideAlert(el);
+}
+
+function formatTime(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+}
+
+function validateStep(step) {
+  clearErr(step);
+  if (step === 1) {
+    if (!val('full-name'))     { showErr(1, 'Full name is required.'); return false; }
+    if (!val('contact-email')) { showErr(1, 'Email address is required.'); return false; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val('contact-email'))) {
+      showErr(1, 'Please enter a valid email address.'); return false;
+    }
+  }
+  if (step === 2) {
+    if (!val('pref-date')) { showErr(2, 'Please select a preferred date.'); return false; }
+    if (!val('pref-time')) { showErr(2, 'Please select a preferred time.'); return false; }
+    const today = new Date(); today.setHours(0,0,0,0);
+    if (new Date(val('pref-date')) < today) { showErr(2, 'Date must be today or in the future.'); return false; }
+  }
+  if (step === 3) {
+    if (!val('chief-complaint')) { showErr(3, 'Please describe your chief complaint.'); return false; }
+    if (val('chief-complaint').length < 10) { showErr(3, 'Please provide more detail (at least 10 characters).'); return false; }
+  }
+  return true;
+}
+
+function goStep(n) {
+  if (n > currentStep && !validateStep(currentStep)) return;
+
+  for (let i = 1; i <= 4; i++) {
+    const ind  = document.getElementById('step-ind-' + i);
+    const line = document.getElementById('line-' + i);
+    ind.classList.remove('active', 'done');
+    if (i < n)  ind.classList.add('done');
+    if (i === n) ind.classList.add('active');
+    if (line) line.style.background = i < n ? 'var(--navy)' : '';
+  }
+
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('step-' + i).classList.toggle('hidden', i !== n);
+  }
+
+  document.getElementById('step-title').textContent = STEP_META[n].title;
+  document.getElementById('step-desc').textContent  = STEP_META[n].desc;
+
+  if (n === 4) buildReview();
+  currentStep = n;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildReview() {
+  const type = (document.querySelector('input[name="consult-type"]:checked') || {}).value || 'video';
+  const typeLabels = { video: '📹 Video call', phone: '📞 Phone call', 'in-person': '🏥 In person' };
+  const rows = [
+    ['Name',              val('full-name')],
+    ['Email',             val('contact-email')],
+    ['Phone',             val('phone') || '—'],
+    ['Date of birth',     val('dob')   || '—'],
+    ['Consultation type', typeLabels[type] || type],
+    ['Preferred date',    val('pref-date') ? new Date(val('pref-date')).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'],
+    ['Preferred time',    formatTime(val('pref-time'))],
+    ['Chief complaint',   val('chief-complaint')],
+    ['Additional notes',  val('additional-notes') || '—'],
+  ];
+  document.getElementById('review-table').innerHTML = rows.map(([label, value]) => `
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--gray-100);font-size:0.875rem;gap:16px;">
+      <span style="color:var(--text-muted);flex-shrink:0;">${escapeHtml(label)}</span>
+      <span style="font-weight:500;text-align:right;word-break:break-word;">${escapeHtml(value)}</span>
+    </div>
+  `).join('');
+}
+
+async function submitRequest() {
+  clearErr(4);
+  const btn = document.getElementById('submit-btn');
+  setLoading(btn, true);
+  const consultType = (document.querySelector('input[name="consult-type"]:checked') || {}).value || 'video';
+  try {
+    const { request } = await API.doctor.submitRequest({
+      consultationId:   prefillTriage?.id || null,
+      fullName:         val('full-name'),
+      email:            val('contact-email'),
+      phone:            val('phone') || null,
+      dateOfBirth:      val('dob')   || null,
+      preferredDate:    val('pref-date'),
+      preferredTime:    val('pref-time'),
+      consultationType: consultType,
+      chiefComplaint:   val('chief-complaint'),
+      triageLevel:      prefillTriage?.triage_level    || null,
+      severityScore:    prefillTriage?.severity_score  || null,
+      additionalNotes:  val('additional-notes') || null,
+    });
+    document.getElementById('confirm-view').classList.add('hidden');
+    document.getElementById('success-view').classList.remove('hidden');
+    const typeLabels = { video:'Video call', phone:'Phone call', 'in-person':'In person' };
+    const prefDate = new Date(request.preferred_date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+    document.getElementById('success-detail').innerHTML = `
+      <div class="success-detail__row"><span class="success-detail__label">Request ID</span><span class="success-detail__value">#${request.id.slice(0,8).toUpperCase()}</span></div>
+      <div class="success-detail__row"><span class="success-detail__label">Type</span><span class="success-detail__value">${typeLabels[request.consultation_type]||request.consultation_type}</span></div>
+      <div class="success-detail__row"><span class="success-detail__label">Preferred date</span><span class="success-detail__value">${prefDate}</span></div>
+      <div class="success-detail__row"><span class="success-detail__label">Preferred time</span><span class="success-detail__value">${formatTime(request.preferred_time)}</span></div>
+      <div class="success-detail__row"><span class="success-detail__label">Status</span><span class="success-detail__value">Pending review</span></div>
+    `;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    showErr(4, err.message || 'Submission failed — please try again.');
+    setLoading(btn, false);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await Auth.requireAuth();
+  if (!user) return;
+
+  document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
+  document.getElementById('btn-1-next').addEventListener('click', () => goStep(2));
+  document.getElementById('btn-2-back').addEventListener('click', () => goStep(1));
+  document.getElementById('btn-2-next').addEventListener('click', () => goStep(3));
+  document.getElementById('btn-3-back').addEventListener('click', () => goStep(2));
+  document.getElementById('btn-3-next').addEventListener('click', () => goStep(4));
+  document.getElementById('btn-4-back').addEventListener('click', () => goStep(3));
+  document.getElementById('submit-btn').addEventListener('click', submitRequest);
+
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('pref-date').setAttribute('min', today);
+  document.getElementById('pref-date').value = today;
+
+  document.getElementById('full-name').value     = user.name  || '';
+  document.getElementById('contact-email').value = user.email || '';
+
+  const params    = new URLSearchParams(window.location.search);
+  const consultId = params.get('consultation');
+  if (consultId) {
+    try {
+      const { consultation } = await API.triage.getConsultation(consultId);
+      prefillTriage = consultation;
+      if (consultation.triage_level) {
+        const colors = { L1:'var(--green)', L2:'var(--amber)', L3:'var(--coral)', L4:'var(--red)' };
+        const bgs    = { L1:'var(--green-light)', L2:'var(--amber-light)', L3:'var(--coral-light)', L4:'var(--red-light)' };
+        const labels = { L1:'Self-care', L2:'GP visit recommended', L3:'Urgent care needed', L4:'Emergency referral' };
+        const lvl    = consultation.triage_level;
+        const summaryEl = document.getElementById('triage-summary');
+        summaryEl.classList.remove('hidden');
+        summaryEl.style.background  = bgs[lvl]    || 'var(--gray-50)';
+        summaryEl.style.borderColor = colors[lvl] || 'var(--gray-100)';
+        document.getElementById('ts-level').textContent = `${lvl} — ${labels[lvl]||''}`;
+        document.getElementById('ts-level').style.color = colors[lvl] || 'var(--text)';
+        document.getElementById('ts-care').textContent  = consultation.care_recommendation || '';
+      }
+      if (consultation.title) {
+        document.getElementById('chief-complaint').value = consultation.title;
+      }
+    } catch (_) {}
+  }
+});
+</script>
+</body>
+</html>

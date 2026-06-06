@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel — MediTriage AI</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+  <style>
+    body { display:flex; flex-direction:column; min-height:100vh; }
+    main { flex:1; background:var(--gray-50); }
+    .admin-layout { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start; }
+    @media(max-width:860px){ .admin-layout { grid-template-columns:1fr; } }
+    .admin-nav { background:var(--white); border:1px solid var(--gray-100); border-radius:var(--radius-lg); overflow:hidden; }
+    .admin-nav__item {
+      display:flex; align-items:center; gap:10px;
+      padding:12px 16px; font-size:0.875rem; font-weight:500;
+      cursor:pointer; border:none; background:none; width:100%; text-align:left;
+      color:var(--text-muted); transition:all var(--transition); border-left:3px solid transparent;
+    }
+    .admin-nav__item:hover { background:var(--gray-50); color:var(--text); }
+    .admin-nav__item.active { background:var(--navy-light); color:var(--navy); border-left-color:var(--navy); }
+    .admin-nav__divider { height:1px; background:var(--gray-100); }
+    .admin-badge { margin-left:auto; background:var(--amber-light); color:var(--amber); padding:1px 7px; border-radius:10px; font-size:0.72rem; font-weight:600; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="navbar__inner">
+    <a href="/" class="navbar__brand">
+      <div class="navbar__brand-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      MediTriage AI
+    </a>
+    <div class="navbar__links">
+      <span class="badge badge--red" style="padding:4px 10px;">Admin panel</span>
+      <div style="font-size:0.82rem;color:var(--text-muted);" class="hide-mobile" data-user-name></div>
+      <button id="logout-btn" class="btn btn--ghost btn--sm">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="page-header">
+    <div class="container">
+      <div class="page-header__eyebrow">Administration</div>
+      <h1>Doctor requests</h1>
+      <p>Review, assign, and manage patient consultation requests.</p>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="container">
+      <div class="admin-layout">
+
+        <!-- Left nav -->
+        <div>
+          <div class="admin-nav">
+            <button class="admin-nav__item active" onclick="filterRequests(null, this)">
+              All requests <span class="admin-badge" id="nav-count-all">0</span>
+            </button>
+            <div class="admin-nav__divider"></div>
+            <button class="admin-nav__item" onclick="filterRequests('pending', this)">
+              🟡 Pending <span class="admin-badge" id="nav-count-pending">0</span>
+            </button>
+            <button class="admin-nav__item" onclick="filterRequests('reviewing', this)">
+              🔵 Reviewing <span class="admin-badge" id="nav-count-reviewing">0</span>
+            </button>
+            <button class="admin-nav__item" onclick="filterRequests('scheduled', this)">
+              🟢 Scheduled <span class="admin-badge" id="nav-count-scheduled">0</span>
+            </button>
+            <button class="admin-nav__item" onclick="filterRequests('completed', this)">
+              ✅ Completed <span class="admin-badge" id="nav-count-completed">0</span>
+            </button>
+            <button class="admin-nav__item" onclick="filterRequests('cancelled', this)">
+              ⛔ Cancelled <span class="admin-badge" id="nav-count-cancelled">0</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Main content -->
+        <div>
+          <!-- Stat strip -->
+          <div class="stat-strip" id="stat-strip"></div>
+
+          <!-- Loading -->
+          <div id="loading" style="text-align:center;padding:48px;color:var(--text-muted);">Loading requests…</div>
+
+          <!-- Table -->
+          <div id="table-wrap" class="section-card hidden">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Type</th>
+                    <th>Triage</th>
+                    <th>Chief complaint</th>
+                    <th>Preferred slot</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="empty-state" class="hidden">
+            <div class="empty-state">
+              <div class="empty-state__icon">✅</div>
+              <h3>No requests found</h3>
+              <p>There are no requests matching this filter.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Update status modal -->
+<div class="modal-overlay hidden" id="update-modal">
+  <div class="modal">
+    <div class="modal__header">
+      <h3>Update request</h3>
+      <button class="modal__close" onclick="closeModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal__body">
+      <div id="update-alert" class="alert alert--error"></div>
+
+      <!-- Patient info summary -->
+      <div id="modal-patient-info" style="background:var(--gray-50);border:1px solid var(--gray-100);border-radius:var(--radius-md);padding:14px;font-size:0.875rem;"></div>
+
+      <div class="form-group">
+        <label class="form-label">Status <span style="color:var(--red)">*</span></label>
+        <select class="form-select" id="update-status">
+          <option value="pending">Pending</option>
+          <option value="reviewing">Reviewing</option>
+          <option value="scheduled">Scheduled</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="scheduled-at-group" style="display:none;">
+        <label class="form-label">Confirmed appointment date & time</label>
+        <input class="form-input" type="datetime-local" id="update-scheduled-at" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Assigned doctor</label>
+        <input class="form-input" type="text" id="update-doctor" placeholder="Dr. First Last" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Doctor notes <span class="text-muted" style="font-weight:400;">(visible to patient)</span></label>
+        <textarea class="form-textarea" id="update-notes" rows="3" placeholder="Notes or instructions for the patient…"></textarea>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn--primary" id="update-submit-btn" onclick="submitUpdate()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+let allRequests = [];
+let activeFilter = null;
+let editingId = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await Auth.requireAdmin();
+  if (!user) return;
+  $$('[data-user-name]').forEach(el => el.textContent = user.name);
+  document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
+
+  // Show/hide scheduled-at field based on status
+  document.getElementById('update-status').addEventListener('change', (e) => {
+    document.getElementById('scheduled-at-group').style.display =
+      e.target.value === 'scheduled' ? 'flex' : 'none';
+  });
+
+  await loadRequests();
+});
+
+async function loadRequests(status = null) {
+  activeFilter = status;
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('table-wrap').classList.add('hidden');
+  document.getElementById('empty-state').classList.add('hidden');
+
+  try {
+    const { requests, counts } = await API.doctor.allRequests(status);
+    allRequests = requests;
+    renderStats(counts);
+    renderTable(requests);
+  } catch (err) {
+    document.getElementById('loading').innerHTML =
+      `<p style="color:var(--red);">Error: ${escapeHtml(err.message)}</p>`;
+  }
+}
+
+function renderStats(counts) {
+  const map = {};
+  counts.forEach(c => map[c.status] = c.count);
+
+  const total = Object.values(map).reduce((a, b) => a + b, 0);
+  ['all','pending','reviewing','scheduled','completed','cancelled'].forEach(k => {
+    const el = document.getElementById(`nav-count-${k}`);
+    if (el) el.textContent = k === 'all' ? total : (map[k] || 0);
+  });
+
+  document.getElementById('stat-strip').innerHTML = `
+    <div class="stat-box"><div class="stat-box__val">${total}</div><div class="stat-box__lbl">Total</div></div>
+    <div class="stat-box"><div class="stat-box__val" style="color:var(--amber)">${map.pending||0}</div><div class="stat-box__lbl">Pending</div></div>
+    <div class="stat-box"><div class="stat-box__val" style="color:var(--navy-mid)">${map.reviewing||0}</div><div class="stat-box__lbl">Reviewing</div></div>
+    <div class="stat-box"><div class="stat-box__val" style="color:var(--teal)">${map.scheduled||0}</div><div class="stat-box__lbl">Scheduled</div></div>
+    <div class="stat-box"><div class="stat-box__val" style="color:var(--green)">${map.completed||0}</div><div class="stat-box__lbl">Completed</div></div>
+  `;
+}
+
+function renderTable(requests) {
+  document.getElementById('loading').classList.add('hidden');
+
+  if (!requests.length) {
+    document.getElementById('empty-state').classList.remove('hidden');
+    return;
+  }
+
+  const typeIcons = { video: '📹', phone: '📞', 'in-person': '🏥' };
+
+  document.getElementById('table-body').innerHTML = requests.map(r => `
+    <tr>
+      <td>
+        <div style="font-weight:500;">${escapeHtml(r.user_name || r.full_name)}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(r.email)}</div>
+      </td>
+      <td>${typeIcons[r.consultation_type] || '📋'} ${escapeHtml(r.consultation_type)}</td>
+      <td>
+        ${r.triage_level
+          ? `<span class="badge ${triageBadgeClass(r.triage_level)}">${r.triage_level}</span>`
+          : '<span class="text-muted">—</span>'}
+      </td>
+      <td class="td-complaint" title="${escapeHtml(r.chief_complaint)}">${escapeHtml(r.chief_complaint)}</td>
+      <td>
+        <div>${formatDateShort(r.preferred_date)}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">${formatTimePref(r.preferred_time)}</div>
+      </td>
+      <td><span class="badge ${statusBadgeClass(r.status)}">${statusLabel(r.status)}</span></td>
+      <td>
+        <button class="btn btn--secondary btn--sm" onclick="openUpdate('${r.id}')">Update</button>
+      </td>
+    </tr>
+  `).join('');
+
+  document.getElementById('table-wrap').classList.remove('hidden');
+}
+
+function filterRequests(status, btn) {
+  $$('.admin-nav__item').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+  loadRequests(status);
+}
+
+function openUpdate(id) {
+  editingId = id;
+  const r = allRequests.find(x => x.id === id);
+  if (!r) return;
+
+  // Populate modal
+  document.getElementById('update-status').value = r.status;
+  document.getElementById('update-doctor').value = r.assigned_doctor || '';
+  document.getElementById('update-notes').value  = r.doctor_notes || '';
+  document.getElementById('update-scheduled-at').value = r.scheduled_at || '';
+  document.getElementById('scheduled-at-group').style.display = r.status === 'scheduled' ? 'flex' : 'none';
+  hideAlert(document.getElementById('update-alert'));
+
+  document.getElementById('modal-patient-info').innerHTML = `
+    <strong>${escapeHtml(r.user_name || r.full_name)}</strong>
+    &nbsp;&middot;&nbsp; ${escapeHtml(r.email)}
+    ${r.phone ? `&nbsp;&middot;&nbsp; ${escapeHtml(r.phone)}` : ''}
+    <br>
+    <span style="color:var(--text-muted);font-size:0.8rem;">
+      ${r.triage_level ? `Triage: ${r.triage_level} &middot; ` : ''}
+      Preferred: ${formatDateShort(r.preferred_date)} @ ${formatTimePref(r.preferred_time)}
+    </span>
+    <div style="margin-top:8px;font-size:0.82rem;color:var(--text);">
+      <em>${escapeHtml(r.chief_complaint)}</em>
+    </div>
+  `;
+
+  document.getElementById('update-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+  editingId = null;
+  document.getElementById('update-modal').classList.add('hidden');
+}
+
+async function submitUpdate() {
+  if (!editingId) return;
+  const btn = document.getElementById('update-submit-btn');
+  setLoading(btn, true);
+  hideAlert(document.getElementById('update-alert'));
+
+  try {
+    await API.doctor.updateRequest(editingId, {
+      status:         document.getElementById('update-status').value,
+      doctorNotes:    document.getElementById('update-notes').value.trim() || null,
+      assignedDoctor: document.getElementById('update-doctor').value.trim() || null,
+      scheduledAt:    document.getElementById('update-scheduled-at').value || null,
+    });
+    closeModal();
+    await loadRequests(activeFilter);
+  } catch (err) {
+    showAlert(document.getElementById('update-alert'), err.message || 'Update failed');
+    setLoading(btn, false);
+  }
+}
+
+function formatTimePref(t) {
+  if (!t) return '—';
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+</script>
+</body>
+</html>
