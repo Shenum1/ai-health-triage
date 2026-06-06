@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Panel — MediTriage AI</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     body { display:flex; flex-direction:column; min-height:100vh; }
     main { flex:1; background:var(--gray-50); }
@@ -66,19 +67,19 @@
             </button>
             <div class="admin-nav__divider"></div>
             <button class="admin-nav__item" onclick="filterRequests('pending', this)">
-              🟡 Pending <span class="admin-badge" id="nav-count-pending">0</span>
+              <i data-lucide="clock" style="width:14px;height:14px;color:var(--amber);"></i> Pending <span class="admin-badge" id="nav-count-pending">0</span>
             </button>
             <button class="admin-nav__item" onclick="filterRequests('reviewing', this)">
-              🔵 Reviewing <span class="admin-badge" id="nav-count-reviewing">0</span>
+              <i data-lucide="search" style="width:14px;height:14px;color:var(--navy-mid);"></i> Reviewing <span class="admin-badge" id="nav-count-reviewing">0</span>
             </button>
             <button class="admin-nav__item" onclick="filterRequests('scheduled', this)">
-              🟢 Scheduled <span class="admin-badge" id="nav-count-scheduled">0</span>
+              <i data-lucide="calendar-check" style="width:14px;height:14px;color:var(--teal);"></i> Scheduled <span class="admin-badge" id="nav-count-scheduled">0</span>
             </button>
             <button class="admin-nav__item" onclick="filterRequests('completed', this)">
-              ✅ Completed <span class="admin-badge" id="nav-count-completed">0</span>
+              <i data-lucide="check-circle" style="width:14px;height:14px;color:var(--green);"></i> Completed <span class="admin-badge" id="nav-count-completed">0</span>
             </button>
             <button class="admin-nav__item" onclick="filterRequests('cancelled', this)">
-              ⛔ Cancelled <span class="admin-badge" id="nav-count-cancelled">0</span>
+              <i data-lucide="x-circle" style="width:14px;height:14px;color:var(--gray-300);"></i> Cancelled <span class="admin-badge" id="nav-count-cancelled">0</span>
             </button>
           </div>
         </div>
@@ -183,6 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (!user) return;
   $$('[data-user-name]').forEach(el => el.textContent = user.name);
   document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
+  renderIcons();
 
   // Show/hide scheduled-at field based on status
   document.getElementById('update-status').addEventListener('change', (e) => {
@@ -237,7 +239,7 @@ function renderTable(requests) {
     return;
   }
 
-  const typeIcons = { video: '📹', phone: '📞', 'in-person': '🏥' };
+  const typeIcons = { video: '<i data-lucide="video" style="width:14px;height:14px;"></i>', phone: '<i data-lucide="phone" style="width:14px;height:14px;"></i>', 'in-person': '<i data-lucide="building-2" style="width:14px;height:14px;"></i>' };
 
   document.getElementById('table-body').innerHTML = requests.map(r => `
     <tr>
@@ -245,7 +247,7 @@ function renderTable(requests) {
         <div style="font-weight:500;">${escapeHtml(r.user_name || r.full_name)}</div>
         <div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(r.email)}</div>
       </td>
-      <td>${typeIcons[r.consultation_type] || '📋'} ${escapeHtml(r.consultation_type)}</td>
+      <td>${typeIcons[r.consultation_type] || ''} ${escapeHtml(r.consultation_type)}</td>
       <td>
         ${r.triage_level
           ? `<span class="badge ${triageBadgeClass(r.triage_level)}">${r.triage_level}</span>`
@@ -264,6 +266,7 @@ function renderTable(requests) {
   `).join('');
 
   document.getElementById('table-wrap').classList.remove('hidden');
+  renderIcons();
 }
 
 function filterRequests(status, btn) {

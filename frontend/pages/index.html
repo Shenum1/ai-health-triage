@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MediTriage AI — Preliminary Health Consultation</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     /* ── Landing-specific styles ── */
     .hero {
@@ -197,12 +198,12 @@
     <h2 class="text-center reveal">Built for clarity when it matters</h2>
     <div class="features__grid">
       <div class="feature-card reveal" style="transition-delay: 0.1s;">
-        <div class="feature-card__icon" style="background: var(--navy-light);">🔬</div>
+        <div class="feature-card__icon" style="background: var(--navy-light);"><i data-lucide="activity" style="width:20px;height:20px;color:var(--navy-mid);"></i></div>
         <h3>Symptom Analysis</h3>
         <p>Describe your symptoms conversationally. The AI interprets them using clinical triage principles.</p>
       </div>
       <div class="feature-card reveal" style="transition-delay: 0.22s;">
-        <div class="feature-card__icon" style="background: var(--teal-light);">📊</div>
+        <div class="feature-card__icon" style="background: var(--teal-light);"><i data-lucide="layers" style="width:20px;height:20px;color:var(--teal);"></i></div>
         <h3>4-Level Triage</h3>
         <p>Every consultation is assessed across four care levels — from self-care to emergency — with a clear recommendation.</p>
       </div>
@@ -269,6 +270,7 @@
   }, { threshold: 0.15 });
 
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  lucide.createIcons();
 </script>
 </body>
 </html>

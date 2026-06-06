@@ -148,6 +148,7 @@ function appendMessage(role, content, triage) {
   wrap.appendChild(bubble);
   container.appendChild(wrap);
   container.scrollTop = container.scrollHeight;
+  renderIcons();
 }
 
 function setTyping(on) {
@@ -222,7 +223,9 @@ function triageCardVariant(level) {
 }
 
 function triageIcon(level) {
-  return { L1: '✓', L2: '↑', L3: '⚠', L4: '🚨' }[level] || '•';
+  const icons = { L1: 'check-circle', L2: 'arrow-up-circle', L3: 'alert-triangle', L4: 'alert-octagon' };
+  const name = icons[level] || 'circle';
+  return `<i data-lucide="${name}" style="width:15px;height:15px;"></i>`;
 }
 
 function newSession() {

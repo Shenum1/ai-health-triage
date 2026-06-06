@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>See a Doctor — MediTriage AI</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     body { display: flex; flex-direction: column; min-height: 100vh; }
     main { flex: 1; background: var(--gray-50); }
@@ -102,10 +103,10 @@
         <div>
           <div class="info-card">
             <div class="info-card__title">What to expect</div>
-            <div class="info-card__item"><span class="info-card__icon">📋</span><div>A qualified doctor will review your request and contact you at the scheduled time.</div></div>
-            <div class="info-card__item"><span class="info-card__icon">🔒</span><div>Your information is kept private and shared only with your assigned doctor.</div></div>
-            <div class="info-card__item"><span class="info-card__icon">⏰</span><div>You'll receive a confirmation once your appointment is accepted.</div></div>
-            <div class="info-card__item"><span class="info-card__icon">🚨</span><div>If you have an emergency, call <strong>911 / 999 / 112</strong> immediately.</div></div>
+            <div class="info-card__item"><span class="info-card__icon"><i data-lucide="clipboard-list" style="width:16px;height:16px;"></i></span><div>A qualified doctor will review your request and contact you at the scheduled time.</div></div>
+            <div class="info-card__item"><span class="info-card__icon"><i data-lucide="lock" style="width:16px;height:16px;"></i></span><div>Your information is kept private and shared only with your assigned doctor.</div></div>
+            <div class="info-card__item"><span class="info-card__icon"><i data-lucide="clock" style="width:16px;height:16px;"></i></span><div>You'll receive a confirmation once your appointment is accepted.</div></div>
+            <div class="info-card__item"><span class="info-card__icon"><i data-lucide="alert-octagon" style="width:16px;height:16px;"></i></span><div>If you have an emergency, call <strong>911 / 999 / 112</strong> immediately.</div></div>
           </div>
           <div id="triage-summary" class="triage-summary-card mt-2 hidden">
             <div class="triage-summary-card__label">From your last consultation</div>
@@ -131,21 +132,21 @@
                   <div>
                     <input class="consult-type-option" type="radio" name="consult-type" id="type-video" value="video" checked />
                     <label class="consult-type-label" for="type-video">
-                      <span class="consult-type-label__icon">📹</span>
+                      <span class="consult-type-label__icon"><i data-lucide="video" style="width:22px;height:22px;"></i></span>
                       <span class="consult-type-label__text">Video call</span>
                     </label>
                   </div>
                   <div>
                     <input class="consult-type-option" type="radio" name="consult-type" id="type-phone" value="phone" />
                     <label class="consult-type-label" for="type-phone">
-                      <span class="consult-type-label__icon">📞</span>
+                      <span class="consult-type-label__icon"><i data-lucide="phone" style="width:22px;height:22px;"></i></span>
                       <span class="consult-type-label__text">Phone call</span>
                     </label>
                   </div>
                   <div>
                     <input class="consult-type-option" type="radio" name="consult-type" id="type-inperson" value="in-person" />
                     <label class="consult-type-label" for="type-inperson">
-                      <span class="consult-type-label__icon">🏥</span>
+                      <span class="consult-type-label__icon"><i data-lucide="building-2" style="width:22px;height:22px;"></i></span>
                       <span class="consult-type-label__text">In person</span>
                     </label>
                   </div>
@@ -219,9 +220,9 @@
         <div>
           <div class="info-card">
             <div class="info-card__title">Tips for a great consultation</div>
-            <div class="info-card__item"><span class="info-card__icon">✓</span><div>Include when symptoms started and how they've changed.</div></div>
-            <div class="info-card__item"><span class="info-card__icon">✓</span><div>Mention any medications you're currently taking.</div></div>
-            <div class="info-card__item"><span class="info-card__icon">✓</span><div>Note any known allergies or past diagnoses.</div></div>
+            <div class="info-card__item"><span class="info-card__icon"><i data-lucide="check" style="width:16px;height:16px;"></i></span><div>Include when symptoms started and how they've changed.</div></div>
+            <div class="info-card__item"><span class="info-card__icon"><i data-lucide="check" style="width:16px;height:16px;"></i></span><div>Mention any medications you're currently taking.</div></div>
+            <div class="info-card__item"><span class="info-card__icon"><i data-lucide="check" style="width:16px;height:16px;"></i></span><div>Note any known allergies or past diagnoses.</div></div>
           </div>
         </div>
       </div>
@@ -350,7 +351,7 @@ function goStep(n) {
 
 function buildReview() {
   const type = (document.querySelector('input[name="consult-type"]:checked') || {}).value || 'video';
-  const typeLabels = { video: '📹 Video call', phone: '📞 Phone call', 'in-person': '🏥 In person' };
+  const typeLabels = { video: 'Video call', phone: 'Phone call', 'in-person': 'In person' };
   const rows = [
     ['Name',              val('full-name')],
     ['Email',             val('contact-email')],
@@ -392,7 +393,7 @@ async function submitRequest() {
     });
     document.getElementById('confirm-view').classList.add('hidden');
     document.getElementById('success-view').classList.remove('hidden');
-    const typeLabels = { video:'Video call', phone:'Phone call', 'in-person':'In person' };
+    const typeLabels = { video: 'Video call', phone: 'Phone call', 'in-person': 'In person' };
     const prefDate = new Date(request.preferred_date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
     document.getElementById('success-detail').innerHTML = `
       <div class="success-detail__row"><span class="success-detail__label">Request ID</span><span class="success-detail__value">#${request.id.slice(0,8).toUpperCase()}</span></div>
@@ -412,6 +413,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const user = await Auth.requireAuth();
   if (!user) return;
 
+  renderIcons();
   document.getElementById('logout-btn').addEventListener('click', () => Auth.logout());
   document.getElementById('btn-1-next').addEventListener('click', () => goStep(2));
   document.getElementById('btn-2-back').addEventListener('click', () => goStep(1));

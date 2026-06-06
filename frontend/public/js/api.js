@@ -136,3 +136,7 @@ function escapeHtml(str) {
 function generateSessionId() {
   return 'sess_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
 }
+
+function renderIcons() {
+  if (window.lucide) lucide.createIcons();
+}

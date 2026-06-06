@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard — MediTriage AI</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     /* ── Layout ───────────────────────────────────────────────── */
     body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; background: var(--gray-50); }
@@ -380,7 +381,7 @@
 
     <!-- Disclaimer -->
     <div class="disclaimer-bar">
-      ⚠ For educational purposes only — not a substitute for professional medical advice. In emergencies, call 911 / 999 / 112 immediately.
+      <i data-lucide="alert-triangle" style="width:13px;height:13px;margin-right:4px;"></i> For educational purposes only — not a substitute for professional medical advice. In emergencies, call 911 / 999 / 112 immediately.
     </div>
 
     <!-- Input -->
@@ -424,6 +425,7 @@
   // Append welcome message once DOM and scripts load
   window.addEventListener('load', () => {
     appendWelcomeMessage();
+    renderIcons();
   });
 </script>
 </body>

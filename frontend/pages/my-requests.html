@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My Appointments — MediTriage AI</title>
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
     body { display:flex; flex-direction:column; min-height:100vh; }
     main { flex:1; background:var(--gray-50); }
@@ -199,11 +200,11 @@
   <!-- Tab bar -->
   <div class="tab-bar">
     <button class="tab-btn active" id="tab-btn-appointments" onclick="switchTab('appointments')">
-      📅 My appointments
+      <i data-lucide="calendar" style="width:15px;height:15px;"></i> My appointments
       <span id="appt-badge" class="badge badge--navy" style="font-size:0.7rem;"></span>
     </button>
     <button class="tab-btn" id="tab-btn-requests" onclick="switchTab('requests')">
-      📋 All requests
+      <i data-lucide="clipboard-list" style="width:15px;height:15px;"></i> All requests
     </button>
   </div>
 
@@ -225,7 +226,7 @@
           </h3>
           <div id="appt-list" style="display:flex;flex-direction:column;gap:14px;"></div>
           <div id="appt-empty" class="empty-state hidden" style="padding:40px 0;">
-            <div class="empty-state__icon">📅</div>
+            <div class="empty-state__icon"><i data-lucide="calendar" style="width:44px;height:44px;stroke:var(--gray-300);"></i></div>
             <h3>No confirmed appointments yet</h3>
             <p>Once a doctor confirms your request, your appointment will appear here with the date, time, and details.</p>
             <a href="/see-a-doctor" class="btn btn--primary">Request a consultation</a>
@@ -249,7 +250,7 @@
       <div id="tab-requests" class="tab-panel hidden">
         <div id="requests-list" style="display:flex;flex-direction:column;gap:14px;"></div>
         <div id="requests-empty" class="empty-state hidden">
-          <div class="empty-state__icon">🩺</div>
+          <div class="empty-state__icon"><i data-lucide="stethoscope" style="width:44px;height:44px;stroke:var(--gray-300);"></i></div>
           <h3>No requests yet</h3>
           <p>Submit a consultation request to speak with a real doctor.</p>
           <a href="/see-a-doctor" class="btn btn--primary">Request a doctor consultation</a>
@@ -314,6 +315,7 @@ async function loadRequests() {
     renderStats();
     renderAppointmentsTab();
     renderAllRequestsTab();
+    renderIcons();
 
     // Badge on Appointments tab
     const scheduled = requests.filter(r => r.status === 'scheduled').length;
@@ -378,7 +380,8 @@ function renderAppointmentsTab() {
 function buildAppointmentCard(r) {
   const isScheduled = r.status === 'scheduled';
   const isCompleted = r.status === 'completed';
-  const typeLabels  = { video:'📹 Video call', phone:'📞 Phone call', 'in-person':'🏥 In person' };
+  const typeLabels  = { video:'Video call', phone:'Phone call', 'in-person':'In person' };
+  const typeIcons   = { video:'<i data-lucide="video" style="width:14px;height:14px;"></i>', phone:'<i data-lucide="phone" style="width:14px;height:14px;"></i>', 'in-person':'<i data-lucide="building-2" style="width:14px;height:14px;"></i>' };
 
   // Confirmed slot block
   let slotHtml = '';
@@ -403,7 +406,7 @@ function buildAppointmentCard(r) {
             ${time}${isToday ? '<span class="confirmed-slot__today">TODAY</span>' : ''}
           </div>
           <div class="confirmed-slot__label">${dayFull}</div>
-          <div style="font-size:0.78rem;margin-top:4px;color:var(--teal);">${typeLabels[r.consultation_type]||r.consultation_type}</div>
+          <div style="font-size:0.78rem;margin-top:4px;color:var(--teal);">${typeIcons[r.consultation_type]||''} ${typeLabels[r.consultation_type]||r.consultation_type}</div>
         </div>
       </div>`;
   }
@@ -411,7 +414,7 @@ function buildAppointmentCard(r) {
   // Doctor note
   const noteHtml = r.doctor_notes ? `
     <div class="doctor-note">
-      <span class="doctor-note__icon">👨‍⚕️</span>
+      <span class="doctor-note__icon"><i data-lucide="stethoscope" style="width:16px;height:16px;"></i></span>
       <div class="doctor-note__body">
         <div class="doctor-note__title">${r.assigned_doctor ? 'Dr. '+escapeHtml(r.assigned_doctor) : 'Doctor'}'s note</div>
         <div>${escapeHtml(r.doctor_notes)}</div>
@@ -466,8 +469,8 @@ function buildAppointmentCard(r) {
 function buildWaitingCard(r) {
   const typeLabels = { video:'📹 Video call', phone:'📞 Phone call', 'in-person':'🏥 In person' };
   const statusInfo = {
-    pending:   { icon:'🟡', msg:'Your request has been received and is awaiting review by our team.' },
-    reviewing: { icon:'🔵', msg:'A doctor is currently reviewing your request. You will be contacted soon.' },
+    pending:   { icon:'<i data-lucide="clock" style="width:18px;height:18px;color:var(--amber);"></i>', msg:'Your request has been received and is awaiting review by our team.' },
+    reviewing: { icon:'<i data-lucide="search" style="width:18px;height:18px;color:var(--navy-mid);"></i>', msg:'A doctor is currently reviewing your request. You will be contacted soon.' },
   };
   const info = statusInfo[r.status] || {};
 
@@ -482,11 +485,11 @@ function buildWaitingCard(r) {
     </div>
     <div class="appt-card__body">
       <div style="font-size:0.875rem;color:var(--text-muted);display:flex;align-items:center;gap:8px;background:var(--gray-50);padding:10px 14px;border-radius:var(--radius-md);">
-        <span style="font-size:18px;">${info.icon}</span>
+        <span>${info.icon}</span>
         <span>${info.msg}</span>
       </div>
       <div class="preferred-slot">
-        <span style="font-size:18px;">📅</span>
+        <span><i data-lucide="calendar" style="width:18px;height:18px;color:var(--text-muted);"></i></span>
         <div>
           <div class="preferred-slot__label">Your preferred slot</div>
           <div class="preferred-slot__val">
@@ -509,8 +512,8 @@ function buildWaitingCard(r) {
 function renderAllRequestsTab() {
   const list  = document.getElementById('requests-list');
   const empty = document.getElementById('requests-empty');
-  const typeIcons = { video:'📹', phone:'📞', 'in-person':'🏥' };
-  const typeLabels= { video:'Video call', phone:'Phone call', 'in-person':'In person' };
+  const typeIcons2  = { video:'<i data-lucide="video" style="width:14px;height:14px;"></i>', phone:'<i data-lucide="phone" style="width:14px;height:14px;"></i>', 'in-person':'<i data-lucide="building-2" style="width:14px;height:14px;"></i>' };
+  const typeLabels2 = { video:'Video call', phone:'Phone call', 'in-person':'In person' };
 
   if (!requests.length) {
     list.innerHTML = '';
@@ -522,10 +525,10 @@ function renderAllRequestsTab() {
   list.innerHTML = requests.map(r => {
     const canCancel = ['pending','reviewing'].includes(r.status);
     const noteHtml  = r.doctor_notes
-      ? `<div class="doctor-note mt-1"><span class="doctor-note__icon">👨‍⚕️</span><div class="doctor-note__body"><div class="doctor-note__title">Doctor's note</div><div>${escapeHtml(r.doctor_notes)}</div></div></div>`
+      ? `<div class="doctor-note mt-1"><span class="doctor-note__icon"><i data-lucide="stethoscope" style="width:16px;height:16px;"></i></span><div class="doctor-note__body"><div class="doctor-note__title">Doctor's note</div><div>${escapeHtml(r.doctor_notes)}</div></div></div>`
       : '';
     const scheduledHtml = r.scheduled_at
-      ? `<div class="request-card__meta-item" style="color:var(--teal);font-weight:500;">✅ Confirmed: ${formatDate(r.scheduled_at)}</div>`
+      ? `<div class="request-card__meta-item" style="color:var(--teal);font-weight:500;"><i data-lucide="check-circle" style="width:14px;height:14px;"></i> Confirmed: ${formatDate(r.scheduled_at)}</div>`
       : '';
 
     return `
@@ -540,9 +543,9 @@ function renderAllRequestsTab() {
         </div>
       </div>
       <div class="request-card__meta">
-        <div class="request-card__meta-item">${typeIcons[r.consultation_type]||'📋'} ${typeLabels[r.consultation_type]||r.consultation_type}</div>
-        <div class="request-card__meta-item">📅 Preferred: ${formatDateShort(r.preferred_date)} @ ${formatTimePref(r.preferred_time)}</div>
-        ${r.assigned_doctor ? `<div class="request-card__meta-item">👨‍⚕️ Dr. ${escapeHtml(r.assigned_doctor)}</div>` : ''}
+        <div class="request-card__meta-item">${typeIcons2[r.consultation_type]||''} ${escapeHtml(typeLabels2[r.consultation_type]||r.consultation_type)}</div>
+        <div class="request-card__meta-item"><i data-lucide="calendar" style="width:14px;height:14px;"></i> Preferred: ${formatDateShort(r.preferred_date)} @ ${formatTimePref(r.preferred_time)}</div>
+        ${r.assigned_doctor ? `<div class="request-card__meta-item"><i data-lucide="user" style="width:14px;height:14px;"></i> Dr. ${escapeHtml(r.assigned_doctor)}</div>` : ''}
         ${scheduledHtml}
       </div>
       <div class="request-card__complaint">${escapeHtml(r.chief_complaint)}</div>
@@ -573,6 +576,7 @@ async function confirmCancel() {
     await API.doctor.cancelRequest(cancelTargetId);
     closeModal();
     await loadRequests();
+    renderIcons();
   } catch (err) {
     showAlert(document.getElementById('cancel-alert'), err.message || 'Failed to cancel');
     setLoading(btn, false);

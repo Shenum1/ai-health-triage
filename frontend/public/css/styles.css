@@ -190,6 +190,9 @@ strong { font-weight: 600; color: var(--text); }
 .gap-1 { gap: 8px; } .gap-2 { gap: 16px; }
 .hidden { display: none !important; }
 
+/* ── Lucide icons ─────────────────────────────────────────── */
+[data-lucide] { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; flex-shrink: 0; }
+
 /* ── Animations ───────────────────────────────────────────── */
 @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeUp  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
