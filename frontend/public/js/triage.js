@@ -41,7 +41,8 @@ let currentTriage = null;
 function initChat() {
   const input   = $('#chat-input');
   const sendBtn = $('#chat-send');
-  const newBtn  = $('#new-session-btn');
+  const newBtn     = $('#new-session-btn');
+  const newBtnSide = $('#new-session-btn-side');
 
   if (!input || !sendBtn) return;
 
@@ -55,7 +56,8 @@ function initChat() {
     sendBtn.disabled = !input.value.trim() || isLoading;
   });
 
-  if (newBtn) newBtn.addEventListener('click', newSession);
+  if (newBtn)     newBtn.addEventListener('click', newSession);
+  if (newBtnSide) newBtnSide.addEventListener('click', newSession);
 
   // Quick chip buttons
   $$('.quick-chip').forEach(chip => {
