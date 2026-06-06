@@ -177,11 +177,41 @@ function setMetrics(count, triage) {
 }
 
 function formatAIReply(text) {
-  return text
+  text = text
     .replace(/TRIAGE_LEVEL:\s*L[1-4]/gi, '')
     .replace(/SEVERITY_SCORE:\s*\d+/gi, '')
     .replace(/CARE_RECOMMENDATION:\s*.+/gi, '')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  const lines = text.split('\n');
+  const out = [];
+  let listType = null;
+
+  for (const raw of lines) {
+    const line = raw.trimStart();
+    const ulMatch = line.match(/^[-*•]\s+(.+)/);
+    const olMatch = line.match(/^\d+[.)]\s+(.+)/);
+
+    if (ulMatch) {
+      if (listType !== 'ul') {
+        if (listType) out.push(`</${listType}>`);
+        out.push('<ul>'); listType = 'ul';
+      }
+      out.push(`<li>${ulMatch[1].trim()}</li>`);
+    } else if (olMatch) {
+      if (listType !== 'ol') {
+        if (listType) out.push(`</${listType}>`);
+        out.push('<ol>'); listType = 'ol';
+      }
+      out.push(`<li>${olMatch[1].trim()}</li>`);
+    } else {
+      if (listType) { out.push(`</${listType}>`); listType = null; }
+      out.push(raw);
+    }
+  }
+  if (listType) out.push(`</${listType}>`);
+
+  return out.join('\n')
     .replace(/\n\n+/g, '<br><br>')
     .replace(/\n/g, '<br>')
     .trim();
