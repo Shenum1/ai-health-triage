@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Dashboard — MediTriage AI</title>
   <link rel="stylesheet" href="/css/styles.css" />
   <style>
     /* ── Layout ───────────────────────────────────────────────── */
-    body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--gray-50); }
+    body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; background: var(--gray-50); }
     .dashboard { display: flex; flex: 1; overflow: hidden; }
 
     /* ── Left Sidebar (history) ───────────────────────────────── */
@@ -152,6 +152,7 @@
     /* ── Input area ───────────────────────────────────────────── */
     .chat-input-area {
       padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
       border-top: 1px solid var(--gray-100);
       background: var(--white);
       flex-shrink: 0;
@@ -190,6 +191,7 @@
       display: flex; gap: 0;
       border-top: 1px solid var(--gray-100);
       flex-shrink: 0; background: var(--white);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .metric {
       flex: 1; text-align: center; padding: 8px 0;
